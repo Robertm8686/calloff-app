@@ -15,4 +15,5 @@ COPY . .
 RUN composer install
 
 # IMPORTANT: serve from public folder
-CMD php -S 0.0.0.0:10000 -t public
+
+CMD sh -c "mkdir -p database && touch database/database.sqlite && php -S 0.0.0.0:10000 -t public"

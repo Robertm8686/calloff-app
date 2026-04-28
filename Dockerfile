@@ -1,16 +1,18 @@
 FROM php:8.2-cli
 
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    git unzip curl libzip-dev \
+    && docker-php-ext-install zip
+
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
 WORKDIR /app
 
 COPY . .
 
-RUN apt-get update && apt-get install -y unzip git \
-    && docker-php-ext-install pdo pdo_mysql
+RUN composer install
 
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-
-RUN composer install --no-dev --optimize-autoloader
-
-EXPOSE 10000
-
-CMD php artisan serve --host=0.0.0.0 --port=10000
+# IMPORTANT: serve from public folder
+CMD php -S 0.0.0.0:10000 -t public

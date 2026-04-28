@@ -6,7 +6,10 @@ Route::get('/', function () {
     return 'App is working';
 });
 
-// This will be your Twilio webhook
+Route::get('/public', function () {
+    return 'App is working';
+});
+
 Route::post('/calloff', function () {
     $message = request('Body');
     $from = request('From');
@@ -17,4 +20,8 @@ Route::post('/calloff', function () {
     ]);
 
     return response('OK');
+});
+
+Route::fallback(function () {
+    return 'App is working';
 });

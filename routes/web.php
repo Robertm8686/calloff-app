@@ -10,8 +10,6 @@ Route::get('/', function () {
 Route::post('/sms', function (Request $request) {
     $message = $request->input('Body');
 
-    return response(
-        '<Response><Message>Got your message: '.$message.'</Message></Response>',
-        200
-    )->header('Content-Type', 'text/xml');
+    // temporarily disable reply
+    return response('', 200);
 });

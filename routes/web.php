@@ -1,19 +1,24 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-Route::post('/sms', function (Request $request) {
-    $message = $request->input('Body');
-    $from = $request->input('From');
+Route::get('/', function () {
+    return 'App is working';
+});
 
-    // Save to database
+Route::post('/sms', function (Request $request) {
     DB::table('messages')->insert([
-        'from' => $from,
-        'body' => $message,
+        'from' => $request->input('From'),
+        'body' => $request->input('Body'),
         'created_at' => now(),
         'updated_at' => now(),
     ]);
 
     return response('', 200);
 });
+
 Route::get('/messages', function () {
     return DB::table('messages')->get();
 });

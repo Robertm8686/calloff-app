@@ -20,5 +20,24 @@ Route::post('/sms', function (Request $request) {
 });
 
 Route::get('/messages', function () {
-    return DB::table('messages')->get();
+    $messages = DB::table('messages')
+        ->orderByDesc('created_at')
+        ->get();
+
+    $html = '<h1>Calloff Messages</h1>';
+    $html .= '<table border="1" cellpadding="10">';
+    $html .= '<tr><th>ID</th><th>From</th><th>Message</th><th>Received At</th></tr>';
+
+    foreach ($messages as $message) {
+        $html .= '<tr>';
+        $html .= '<td>'.$message->id.'</td>';
+        $html .= '<td>'.$message->from.'</td>';
+        $html .= '<td>'.$message->body.'</td>';
+        $html .= '<td>'.$message->created_at.'</td>';
+        $html .= '</tr>';
+    }
+
+    $html .= '</table>';
+
+    return $html;
 });

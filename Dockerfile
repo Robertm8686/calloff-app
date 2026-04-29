@@ -16,4 +16,4 @@ COPY . .
 RUN composer install --no-dev --optimize-autoloader
 
 # Serve Laravel from public folder
-CMD php -S 0.0.0.0:10000 -t public
+CMD sh -c "mkdir -p database && touch database/database.sqlite && php artisan migrate --force && php -S 0.0.0.0:10000 -t public"

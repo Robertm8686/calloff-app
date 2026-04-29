@@ -1,20 +1,19 @@
-<?php
-
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Http\Request;
 
-Route::get('/', function () {
-    return 'App is working';
-});
+Route::post('/sms', function (Request $request) {
 
-Route::post('/sms', function () {
-    $message = request('Body');
-    $from = request('From');
+    $message = $request->input('Body');
+    $from = $request->input('From');
 
-    Log::info('SMS received', [
+    \Log::info('Call off message received', [
         'from' => $from,
         'message' => $message
     ]);
 
-    return response('OK');
+    return response('<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <Message>Received your message</Message>
+</Response>', 200)
+    ->header('Content-Type', 'text/xml');
 });

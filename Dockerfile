@@ -1,19 +1,19 @@
 FROM php:8.2-cli
 
-# Install dependencies
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
-    git unzip curl libzip-dev \
+    git unzip curl libzip-dev zip \
     && docker-php-ext-install zip
 
-# Install Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+# Install Composer (THIS IS THE FIX)
+RUN curl -sS https://getcomposer.org/installer | php \
+    && mv composer.phar /usr/local/bin/composer
 
 WORKDIR /app
 
 COPY . .
 
-RUN composer install
+RUN composer install --no-dev --optimize-autoloader
 
-# IMPORTANT: serve from public folder
-
-CMD sh -c "mkdir -p database && touch database/database.sqlite && php -S 0.0.0.0:10000 -t public"
+# Serve Laravel from public folder
+CMD php -S 0.0.0.0:10000 -t public

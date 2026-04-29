@@ -14,3 +14,6 @@ Route::post('/sms', function (Request $request) {
 
     return response('', 200);
 });
+Route::get('/messages', function () {
+    return DB::table('messages')->get();
+});

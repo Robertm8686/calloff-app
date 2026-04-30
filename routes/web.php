@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 /*
 |--------------------------------------------------------------------------
@@ -35,4 +36,12 @@ Route::post('/sms', function (Request $request) {
 Route::get('/messages', function () {
     $messages = DB::table('messages')->get();
     return view('messages', ['messages' => $messages]);
+});
+Route::get('/test-email', function () {
+    Mail::raw('This is a test email from the Calloff App.', function ($message) {
+        $message->to('Robert.m@essentialstaff.com')
+            ->subject('Calloff App Test Email');
+    });
+
+    return 'Email sent';
 });

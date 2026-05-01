@@ -69,3 +69,17 @@ Route::post('/employees', function (Request $request) {
 
     return redirect('/messages');
 });
+Route::post('/employees', function (Request $request) {
+
+    DB::table('employees')->insert([
+        'name' => $request->name,
+        'phone' => $request->phone,
+        'client_name' => $request->client_name,
+        'client_email' => $request->client_email,
+        'active' => true,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    return redirect('/employees/create');
+});

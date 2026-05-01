@@ -20,11 +20,21 @@ Route::post('/sms', function (Request $request) {
     ]);
 
     if ($status === 'CALLOFF') {
-        Mail::raw("Employee called off.\n\nFrom: $from\nMessage: $message", function ($mail) {
-            $mail->to('kenji26m@gmail.com')
-                ->subject('Call Off Alert');
-        });
-    }
+
+    $employee = DB::table('employees')
+        ->where('phone', $from)
+        ->first();
+
+    $name = $employee ? $employee->name : 'Unknown Employee';
+    $clientEmail = $employee && $employee->client_email 
+        ? $employee->client_email 
+        : 'kenji26m@gmail.com';
+
+    Mail::raw("Employee called off.\n\nName: $name\nPhone: $from\nMessage: $message", function ($mail) use ($clientEmail) {
+        $mail->to($clientEmail)
+            ->subject('Call Off Alert');
+    });
+}
 
     return response('', 200);
 });

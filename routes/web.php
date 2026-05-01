@@ -87,3 +87,19 @@ Route::get('/employees', function () {
     $employees = DB::table('employees')->get();
     return view('employees', ['employees' => $employees]);
 });
+Route::get('/employees/{id}/edit', function ($id) {
+    $employee = DB::table('employees')->where('id', $id)->first();
+    return view('employees-edit', ['employee' => $employee]);
+});
+
+Route::post('/employees/{id}/update', function (Request $request, $id) {
+    DB::table('employees')->where('id', $id)->update([
+        'name' => $request->name,
+        'phone' => $request->phone,
+        'client_name' => $request->client_name,
+        'client_email' => $request->client_email,
+        'updated_at' => now(),
+    ]);
+
+    return redirect('/employees');
+});

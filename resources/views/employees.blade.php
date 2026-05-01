@@ -3,13 +3,14 @@
 <a href="/employees/create">Add New Employee</a>
 
 <table border="1" cellpadding="5">
-    <tr>
-        <th>ID</th>
-        <th>Name</th>
-        <th>Phone</th>
-        <th>Client</th>
-        <th>Email</th>
-    </tr>
+<tr>
+    <th>ID</th>
+    <th>Name</th>
+    <th>Phone</th>
+    <th>Client</th>
+    <th>Email</th>
+    <th>Action</th>
+</tr>
 
 @foreach($employees as $emp)
 <tr>
@@ -18,6 +19,9 @@
     <td>{{ $emp->phone }}</td>
     <td>{{ $emp->client_name }}</td>
     <td>{{ $emp->client_email }}</td>
+    <td>
+        <a href="/employees/{{ $emp->id }}/edit">Edit</a>
+    </td>
 </tr>
 @endforeach
 

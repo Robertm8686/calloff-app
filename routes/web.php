@@ -83,3 +83,7 @@ Route::post('/employees', function (Request $request) {
 
     return redirect('/employees/create');
 });
+Route::get('/employees', function () {
+    $employees = DB::table('employees')->get();
+    return view('employees', ['employees' => $employees]);
+});

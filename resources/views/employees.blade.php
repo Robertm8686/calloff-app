@@ -2,8 +2,6 @@
 
 <a href="/employees/create">Add New Employee</a>
 
-{{ dd($employees) }}
-
 <table border="1" cellpadding="5">
     <tr>
         <th>ID</th>

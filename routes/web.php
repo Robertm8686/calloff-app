@@ -1,17 +1,3 @@
-<?php
-
-use Illuminate\Support\Facades\Route;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
-
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-*/
-
-// 🔹 Receive SMS (Twilio webhook)
 Route::post('/sms', function (Request $request) {
 
     $message = strtolower($request->input('Body'));
@@ -28,20 +14,13 @@ Route::post('/sms', function (Request $request) {
         'updated_at' => now(),
     ]);
 
+    // 🚨 SEND EMAIL IF CALLOFF
+    if ($status === 'CALLOFF') {
+        Mail::raw("Call-off detected\n\nFrom: $from\nMessage: $message", function ($mail) {
+            $mail->to('kenji26m@gmail.com')
+                 ->subject('🚨 Employee Call-Off Alert');
+        });
+    }
+
     return response('', 200);
-});
-
-
-// 🔹 Dashboard page
-Route::get('/messages', function () {
-    $messages = DB::table('messages')->get();
-    return view('messages', ['messages' => $messages]);
-});
-Route::get('/test-email', function () {
-    Mail::raw('This is a test email from the Calloff App.', function ($message) {
-        $message->to('kenji26m@gmail.com')
-            ->subject('Calloff App Test Email');
-    });
-
-    return 'Email sent';
 });

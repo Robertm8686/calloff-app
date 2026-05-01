@@ -52,3 +52,20 @@ Route::get('/test-email', function () {
 
     return 'Email sent';
 });
+Route::get('/employees/create', function () {
+    return view('employees-create');
+});
+
+Route::post('/employees', function (Request $request) {
+    DB::table('employees')->insert([
+        'name' => $request->input('name'),
+        'phone' => $request->input('phone'),
+        'client_name' => $request->input('client_name'),
+        'client_email' => $request->input('client_email'),
+        'active' => true,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    return redirect('/messages');
+});

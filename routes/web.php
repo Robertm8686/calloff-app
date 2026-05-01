@@ -39,7 +39,7 @@ Route::get('/messages', function () {
 });
 Route::get('/test-email', function () {
     Mail::raw('This is a test email from the Calloff App.', function ($message) {
-        $message->to('Robert.m@essentialstaff.com')
+        $message->to('kenji26m@gmail.com')
             ->subject('Calloff App Test Email');
     });
 

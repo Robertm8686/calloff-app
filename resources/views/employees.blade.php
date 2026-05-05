@@ -20,13 +20,9 @@
     <td>{{ $emp->client_name }}</td>
     <td>{{ $emp->client_email }}</td>
     <td>
-    <a href="/employees/{{ $emp->id }}/edit">Edit</a>
-
-    <form method="POST" action="/employees/{{ $emp->id }}/delete" style="display:inline;">
-        @csrf
-        <button type="submit">Delete</button>
-    </form>
-</td>
+        <a href="/employees/edit/{{ $emp->id }}">Edit</a> |
+        <a href="/employees/delete/{{ $emp->id }}">Delete</a>
+    </td>
 </tr>
 @endforeach
 

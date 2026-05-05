@@ -116,3 +116,11 @@ Route::post('/employees/{id}/delete', function ($id) {
 
     return redirect('/employees');
 });
+Route::get('/employees/delete/{id}', function ($id) {
+    DB::table('employees')->where('id', $id)->delete();
+    return redirect('/employees');
+});
+Route::get('/employees/delete/{id}', function ($id) {
+    DB::table('employees')->where('id', $id)->delete();
+    return redirect('/employees');
+});

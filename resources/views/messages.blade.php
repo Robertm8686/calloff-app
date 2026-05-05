@@ -164,13 +164,23 @@
             </tr>
 
         <?php foreach ($messages as $msg): ?>
-            <tr class="<?= $msg->status === 'CALLOFF' ? 'calloff' : '' ?>">
+            <tr style="<?= $msg->status === 'CALLOFF' ? 'background:#fee2e2;border-left:5px solid #dc2626;' : '' ?>">
                 <td><?= $msg->id ?></td>
                 <td><?= $msg->from ?></td>
                 <td><?= $msg->employee_name ?? 'Unknown' ?></td>
                 <td><?= $msg->client_name ?? 'N/A' ?></td>
                 <td><?= $msg->body ?></td>
-                <td class="status"><?= $msg->status ?? 'N/A' ?></td>
+                <td>
+    <?php if ($msg->status === 'CALLOFF'): ?>
+        <span style="background:#dc2626;color:white;padding:4px 8px;border-radius:6px;font-weight:bold;">
+            CALLOFF
+        </span>
+    <?php else: ?>
+        <span style="background:#e5e7eb;color:#374151;padding:4px 8px;border-radius:6px;">
+            <?= $msg->status ?? 'N/A' ?>
+        </span>
+    <?php endif; ?>
+</td>
                 <td><?= date('m/d/Y g:i A', strtotime($msg->created_at)) ?></td>
             </tr>
         <?php endforeach; ?>

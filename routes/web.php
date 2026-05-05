@@ -40,7 +40,15 @@ Route::post('/sms', function (Request $request) {
 });
 
 Route::get('/messages', function () {
-    $messages = DB::table('messages')->get();
+    $messages = DB::table('messages')
+        ->leftJoin('employees', 'messages.from', '=', 'employees.phone')
+        ->select(
+            'messages.*',
+            'employees.name as employee_name',
+            'employees.client_name as client_name'
+        )
+        ->get();
+
     return view('messages', ['messages' => $messages]);
 });
 
@@ -100,6 +108,11 @@ Route::post('/employees/{id}/update', function (Request $request, $id) {
         'client_email' => $request->client_email,
         'updated_at' => now(),
     ]);
+
+    return redirect('/employees');
+});
+Route::post('/employees/{id}/delete', function ($id) {
+    DB::table('employees')->where('id', $id)->delete();
 
     return redirect('/employees');
 });

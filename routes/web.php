@@ -64,7 +64,9 @@ Route::get('/messages', function (Request $request) {
         $query->where('messages.status', 'CALLOFF');
     }
 
-    $messages = $query->get();
+    $messages = $query
+    ->orderByDesc('messages.created_at')
+    ->get();
 
     $todayCalloffs = DB::table('messages')
         ->where('status', 'CALLOFF')

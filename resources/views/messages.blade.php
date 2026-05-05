@@ -141,7 +141,7 @@
                 <?php if ($msg->status === 'CALLOFF' && $msg->client_name == $client->client_name): ?>
                     <li>
                         <?= $msg->employee_name ?? 'Unknown' ?>
-                        (<?= $msg->created_at ?>)
+                        (<?= date('m/d/Y g:i A', strtotime($msg->created_at)) ?>)
                     </li>
                 <?php endif; ?>
             <?php endforeach; ?>
@@ -171,7 +171,7 @@
                 <td><?= $msg->client_name ?? 'N/A' ?></td>
                 <td><?= $msg->body ?></td>
                 <td class="status"><?= $msg->status ?? 'N/A' ?></td>
-                <td><?= $msg->created_at ?></td>
+                <td><?= date('m/d/Y g:i A', strtotime($msg->created_at)) ?></td>
             </tr>
         <?php endforeach; ?>
 

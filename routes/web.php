@@ -11,13 +11,23 @@ Route::post('/sms', function (Request $request) {
 
     $status = str_contains($message, 'call off') ? 'CALLOFF' : 'OTHER';
 
-    DB::table('messages')->insert([
-        'from' => $from,
-        'body' => $message,
-        'status' => $status,
-        'created_at' => now(),
-        'updated_at' => now(),
-    ]);
+$alreadyCalledOffToday = DB::table('messages')
+    ->where('from', $from)
+    ->where('status', 'CALLOFF')
+    ->whereDate('created_at', today())
+    ->exists();
+
+if ($status === 'CALLOFF' && $alreadyCalledOffToday) {
+    return response('Duplicate call off ignored', 200);
+}
+
+DB::table('messages')->insert([
+    'from' => $from,
+    'body' => $message,
+    'status' => $status,
+    'created_at' => now(),
+    'updated_at' => now(),
+]);
 
     if ($status === 'CALLOFF') {
         $employee = DB::table('employees')->where('phone', $from)->first();

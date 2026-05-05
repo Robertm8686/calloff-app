@@ -115,13 +115,17 @@
     <div class="card">
         <h2>Call Offs by Client</h2>
 
-        <ul>
-        <?php foreach ($clientSummary as $client): ?>
-            <li>
-                <?= $client->client_name ?? 'Unknown' ?>: <?= $client->total ?>
-            </li>
-        <?php endforeach; ?>
-        </ul>
+<?php if (count($clientSummary) === 0): ?>
+    <p>No call offs today</p>
+<?php else: ?>
+    <ul>
+    <?php foreach ($clientSummary as $client): ?>
+        <li>
+            <?= $client->client_name ?? 'Unknown' ?>: <?= $client->total ?>
+        </li>
+    <?php endforeach; ?>
+    </ul>
+<?php endif; ?>
     </div>
 
     <div class="card">

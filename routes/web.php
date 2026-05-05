@@ -63,6 +63,15 @@ Route::get('/messages', function (Request $request) {
     if ($request->input('calloff') == 1) {
         $query->where('messages.status', 'CALLOFF');
     }
+if ($request->input('search')) {
+    $search = $request->input('search');
+
+    $query->where(function ($q) use ($search) {
+        $q->where('messages.from', 'like', "%$search%")
+          ->orWhere('employees.name', 'like', "%$search%")
+          ->orWhere('employees.client_name', 'like', "%$search%");
+    });
+}
 
     $messages = $query
     ->orderByDesc('messages.created_at')

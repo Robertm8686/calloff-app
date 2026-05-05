@@ -107,11 +107,36 @@
 
     <div class="card">
         <a class="button" href="/messages">All Messages</a>
+<div class="card">
+    <form method="GET" action="/messages">
+        <input 
+            type="text" 
+            name="search" 
+            placeholder="Search employee, phone, or client..." 
+            style="padding:10px;width:300px;border-radius:6px;border:1px solid #ccc;"
+            value="<?= $_GET['search'] ?? '' ?>"
+        >
+
+        <button type="submit" class="button">Search</button>
+    </form>
+</div>
         <a class="button secondary" href="/messages?calloff=1">Call Off Only</a>
         <a class="button secondary" href="/employees">Employees</a>
         <a class="button secondary" href="/send-daily-summary">Send Daily Summary</a>
     </div>
+<div class="card">
+    <form method="GET" action="/messages">
+        <input 
+            type="text" 
+            name="search" 
+            placeholder="Search employee, phone, or client..." 
+            style="padding:10px;width:300px;border-radius:6px;border:1px solid #ccc;"
+            value="<?= $_GET['search'] ?? '' ?>"
+        >
 
+        <button type="submit" class="button">Search</button>
+    </form>
+</div>
     <div class="card">
         <h2>Call Offs by Client</h2>
 

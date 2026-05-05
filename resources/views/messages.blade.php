@@ -7,6 +7,16 @@
     <a href="/messages?calloff=1">Call Off Only</a>
 </p>
 
+<h3>Call Offs by Client</h3>
+
+<ul>
+<?php foreach ($clientSummary as $client): ?>
+    <li>
+        <?= $client->client_name ?? 'Unknown' ?>: <?= $client->total ?>
+    </li>
+<?php endforeach; ?>
+</ul>
+
 <table border="1" cellpadding="10">
     <tr>
         <th>ID</th>

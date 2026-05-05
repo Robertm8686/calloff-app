@@ -38,6 +38,7 @@ Route::post('/sms', function (Request $request) {
 });
 
 Route::get('/messages', function (Request $request) {
+
     $query = DB::table('messages')
         ->leftJoin('employees', 'messages.from', '=', 'employees.phone')
         ->select(
@@ -57,9 +58,19 @@ Route::get('/messages', function (Request $request) {
         ->whereDate('created_at', today())
         ->count();
 
+    // 🔥 NEW: group by client
+    $clientSummary = DB::table('messages')
+        ->leftJoin('employees', 'messages.from', '=', 'employees.phone')
+        ->select('employees.client_name', DB::raw('count(*) as total'))
+        ->where('messages.status', 'CALLOFF')
+        ->whereDate('messages.created_at', today())
+        ->groupBy('employees.client_name')
+        ->get();
+
     return view('messages', [
         'messages' => $messages,
-        'todayCalloffs' => $todayCalloffs
+        'todayCalloffs' => $todayCalloffs,
+        'clientSummary' => $clientSummary
     ]);
 });
 

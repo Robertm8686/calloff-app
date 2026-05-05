@@ -127,3 +127,37 @@ Route::get('/employees/delete/{id}', function ($id) {
     DB::table('employees')->where('id', $id)->delete();
     return redirect('/employees');
 });
+Route::get('/send-daily-summary', function () {
+
+    $clients = DB::table('messages')
+        ->leftJoin('employees', 'messages.from', '=', 'employees.phone')
+        ->select(
+            'employees.client_name',
+            'employees.client_email',
+            'employees.name',
+            'messages.body',
+            'messages.created_at'
+        )
+        ->where('messages.status', 'CALLOFF')
+        ->whereDate('messages.created_at', today())
+        ->get()
+        ->groupBy('client_name');
+
+    foreach ($clients as $clientName => $records) {
+        $clientEmail = $records[0]->client_email ?? 'kenji26m@gmail.com';
+
+        $body = "Daily Call-Off Summary\n\nClient: $clientName\n\n";
+
+        foreach ($records as $r) {
+            $name = $r->name ?? 'Unknown Employee';
+            $body .= "- {$name} ({$r->created_at}): {$r->body}\n";
+        }
+
+        Mail::raw($body, function ($mail) use ($clientEmail, $clientName) {
+            $mail->to($clientEmail)
+                ->subject("Daily Call-Off Summary - $clientName");
+        });
+    }
+
+    return "Summary emails sent";
+});

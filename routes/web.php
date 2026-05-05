@@ -192,6 +192,10 @@ Route::get('/send-daily-summary', function () {
 });
 Route::get('/client/{client}', function ($client) {
 
+    if (session('client') !== $client) {
+        return redirect('/login');
+    }
+
     $messages = DB::table('messages')
         ->leftJoin('employees', 'messages.from', '=', 'employees.phone')
         ->select(
@@ -207,4 +211,20 @@ Route::get('/client/{client}', function ($client) {
         'messages' => $messages,
         'client' => $client
     ]);
+});
+Route::get('/login', function () {
+    return view('login');
+});
+Route::post('/login', function (Illuminate\Http\Request $request) {
+
+    $client = DB::table('employees')
+        ->where('client_email', $request->email)
+        ->first();
+
+    if ($client && $request->password === '1234') {
+        session(['client' => $client->client_name]);
+        return redirect('/client/' . $client->client_name);
+    }
+
+    return 'Login failed';
 });

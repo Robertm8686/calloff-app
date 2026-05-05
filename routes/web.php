@@ -44,7 +44,10 @@ DB::table('messages')->insert([
         });
     }
 
-    return response('', 200);
+    return response(
+    '<Response><Message>Your call-off has been received.</Message></Response>',
+    200
+)->header('Content-Type', 'text/xml');;
 });
 
 Route::get('/messages', function (Request $request) {

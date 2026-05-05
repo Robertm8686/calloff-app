@@ -9,7 +9,12 @@ Route::post('/sms', function (Request $request) {
     $message = strtolower($request->input('Body'));
     $from = $request->input('From');
 
-    $status = str_contains($message, 'call off') ? 'CALLOFF' : 'OTHER';
+    $status = (
+    str_contains($message, 'call off') ||
+    str_contains($message, 'call of') ||
+    str_contains($message, 'sick') ||
+    str_contains($message, 'not coming')
+) ? 'CALLOFF' : 'OTHER';
 
 $alreadyCalledOffToday = DB::table('messages')
     ->where('from', $from)

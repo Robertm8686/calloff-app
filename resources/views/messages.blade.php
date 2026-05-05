@@ -127,7 +127,28 @@
     </ul>
 <?php endif; ?>
     </div>
+<div class="card">
+    <h2>Today's Call-Offs</h2>
 
+    <?php if (count($clientSummary) === 0): ?>
+        <p>No call offs today</p>
+    <?php else: ?>
+        <?php foreach ($clientSummary as $client): ?>
+            <h3><?= $client->client_name ?? 'Unknown' ?></h3>
+
+            <ul>
+            <?php foreach ($messages as $msg): ?>
+                <?php if ($msg->status === 'CALLOFF' && $msg->client_name == $client->client_name): ?>
+                    <li>
+                        <?= $msg->employee_name ?? 'Unknown' ?>
+                        (<?= $msg->created_at ?>)
+                    </li>
+                <?php endif; ?>
+            <?php endforeach; ?>
+            </ul>
+        <?php endforeach; ?>
+    <?php endif; ?>
+</div>
     <div class="card">
         <h2>Messages</h2>
 

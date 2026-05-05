@@ -185,3 +185,21 @@ Route::get('/send-daily-summary', function () {
 
     return "Summary emails sent";
 });
+Route::get('/client/{client}', function ($client) {
+
+    $messages = DB::table('messages')
+        ->leftJoin('employees', 'messages.from', '=', 'employees.phone')
+        ->select(
+            'messages.*',
+            'employees.name as employee_name',
+            'employees.client_name as client_name'
+        )
+        ->where('employees.client_name', $client)
+        ->orderByDesc('messages.created_at')
+        ->get();
+
+    return view('client', [
+        'messages' => $messages,
+        'client' => $client
+    ]);
+});

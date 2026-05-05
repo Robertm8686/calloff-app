@@ -1,5 +1,7 @@
 <h1>Calloff Messages</h1>
 
+<h2>Total Call Offs Today: <?= $todayCalloffs ?></h2>
+
 <p>
     <a href="/messages">All Messages</a> |
     <a href="/messages?calloff=1">Call Off Only</a>

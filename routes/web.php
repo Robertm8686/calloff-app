@@ -20,27 +20,24 @@ Route::post('/sms', function (Request $request) {
     ]);
 
     if ($status === 'CALLOFF') {
+        $employee = DB::table('employees')->where('phone', $from)->first();
 
-    $employee = DB::table('employees')
-        ->where('phone', $from)
-        ->first();
+        $name = $employee ? $employee->name : 'Unknown Employee';
+        $clientName = $employee ? $employee->client_name : 'N/A';
+        $clientEmail = $employee && $employee->client_email
+            ? $employee->client_email
+            : 'kenji26m@gmail.com';
 
-    $name = $employee ? $employee->name : 'Unknown Employee';
-    $clientEmail = $employee && $employee->client_email 
-        ? $employee->client_email 
-        : 'kenji26m@gmail.com';
-
-    Mail::raw("Employee called off.\n\nName: $name\nPhone: $from\nMessage: $message", function ($mail) use ($clientEmail) {
-        $mail->to($clientEmail)
-            ->subject('Call Off Alert');
-    });
-}
+        Mail::raw("Employee called off.\n\nName: $name\nClient: $clientName\nPhone: $from\nMessage: $message", function ($mail) use ($clientEmail) {
+            $mail->to($clientEmail)
+                ->subject('Call Off Alert');
+        });
+    }
 
     return response('', 200);
 });
 
 Route::get('/messages', function (Request $request) {
-
     $query = DB::table('messages')
         ->leftJoin('employees', 'messages.from', '=', 'employees.phone')
         ->select(
@@ -49,14 +46,21 @@ Route::get('/messages', function (Request $request) {
             'employees.client_name as client_name'
         );
 
-    // filter if ?calloff=1
     if ($request->input('calloff') == 1) {
         $query->where('messages.status', 'CALLOFF');
     }
 
     $messages = $query->get();
 
-    return view('messages', ['messages' => $messages]);
+    $todayCalloffs = DB::table('messages')
+        ->where('status', 'CALLOFF')
+        ->whereDate('created_at', today())
+        ->count();
+
+    return view('messages', [
+        'messages' => $messages,
+        'todayCalloffs' => $todayCalloffs
+    ]);
 });
 
 Route::get('/test-email', function () {
@@ -67,25 +71,17 @@ Route::get('/test-email', function () {
 
     return 'Email sent';
 });
+
+Route::get('/employees', function () {
+    $employees = DB::table('employees')->get();
+    return view('employees', ['employees' => $employees]);
+});
+
 Route::get('/employees/create', function () {
     return view('employees-create');
 });
 
 Route::post('/employees', function (Request $request) {
-    DB::table('employees')->insert([
-        'name' => $request->input('name'),
-        'phone' => $request->input('phone'),
-        'client_name' => $request->input('client_name'),
-        'client_email' => $request->input('client_email'),
-        'active' => true,
-        'created_at' => now(),
-        'updated_at' => now(),
-    ]);
-
-    return redirect('/messages');
-});
-Route::post('/employees', function (Request $request) {
-
     DB::table('employees')->insert([
         'name' => $request->name,
         'phone' => $request->phone,
@@ -96,12 +92,9 @@ Route::post('/employees', function (Request $request) {
         'updated_at' => now(),
     ]);
 
-    return redirect('/employees/create');
+    return redirect('/employees');
 });
-Route::get('/employees', function () {
-    $employees = DB::table('employees')->get();
-    return view('employees', ['employees' => $employees]);
-});
+
 Route::get('/employees/{id}/edit', function ($id) {
     $employee = DB::table('employees')->where('id', $id)->first();
     return view('employees-edit', ['employee' => $employee]);
@@ -118,15 +111,7 @@ Route::post('/employees/{id}/update', function (Request $request, $id) {
 
     return redirect('/employees');
 });
-Route::post('/employees/{id}/delete', function ($id) {
-    DB::table('employees')->where('id', $id)->delete();
 
-    return redirect('/employees');
-});
-Route::get('/employees/delete/{id}', function ($id) {
-    DB::table('employees')->where('id', $id)->delete();
-    return redirect('/employees');
-});
 Route::get('/employees/delete/{id}', function ($id) {
     DB::table('employees')->where('id', $id)->delete();
     return redirect('/employees');

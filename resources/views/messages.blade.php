@@ -1,43 +1,158 @@
-<h1>Calloff Messages</h1>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Calloff Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            margin: 0;
+            padding: 30px;
+        }
 
-<h2>Total Call Offs Today: <?= $todayCalloffs ?></h2>
+        .container {
+            max-width: 1100px;
+            margin: auto;
+        }
 
-<p>
-    <a href="/messages">All Messages</a> |
-    <a href="/messages?calloff=1">Call Off Only</a>
-</p>
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
 
-<h3>Call Offs by Client</h3>
+        h1 {
+            margin-top: 0;
+        }
 
-<ul>
-<?php foreach ($clientSummary as $client): ?>
-    <li>
-        <?= $client->client_name ?? 'Unknown' ?>: <?= $client->total ?>
-    </li>
-<?php endforeach; ?>
-</ul>
+        .stats {
+            display: flex;
+            gap: 20px;
+        }
 
-<table border="1" cellpadding="10">
-    <tr>
-        <th>ID</th>
-        <th>From</th>
-        <th>Employee</th>
-        <th>Client</th>
-        <th>Message</th>
-        <th>Status</th>
-        <th>Received At</th>
-    </tr>
+        .stat-box {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            flex: 1;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
 
-<?php foreach ($messages as $msg): ?>
-<tr style="<?= $msg->status === 'CALLOFF' ? 'background-color: #ffcccc;' : '' ?>">
-    <td><?= $msg->id ?></td>
-    <td><?= $msg->from ?></td>
-    <td><?= $msg->employee_name ?? 'Unknown' ?></td>
-    <td><?= $msg->client_name ?? 'N/A' ?></td>
-    <td><?= $msg->body ?></td>
-    <td><?= $msg->status ?? 'N/A' ?></td>
-    <td><?= $msg->created_at ?></td>
-</tr>
-<?php endforeach; ?>
+        .stat-number {
+            font-size: 36px;
+            font-weight: bold;
+            color: #c0392b;
+        }
 
-</table>
+        a.button {
+            display: inline-block;
+            padding: 10px 14px;
+            background: #2563eb;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            margin-right: 8px;
+        }
+
+        a.button.secondary {
+            background: #6b7280;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th {
+            background: #111827;
+            color: white;
+            text-align: left;
+            padding: 12px;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        tr.calloff {
+            background: #fee2e2;
+        }
+
+        .status {
+            font-weight: bold;
+            color: #b91c1c;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <h1>Calloff Dashboard</h1>
+
+    <div class="stats">
+        <div class="stat-box">
+            <div>Total Call Offs Today</div>
+            <div class="stat-number"><?= $todayCalloffs ?></div>
+        </div>
+
+        <div class="stat-box">
+            <div>Clients with Call Offs</div>
+            <div class="stat-number"><?= count($clientSummary) ?></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <a class="button" href="/messages">All Messages</a>
+        <a class="button secondary" href="/messages?calloff=1">Call Off Only</a>
+        <a class="button secondary" href="/employees">Employees</a>
+        <a class="button secondary" href="/send-daily-summary">Send Daily Summary</a>
+    </div>
+
+    <div class="card">
+        <h2>Call Offs by Client</h2>
+
+        <ul>
+        <?php foreach ($clientSummary as $client): ?>
+            <li>
+                <?= $client->client_name ?? 'Unknown' ?>: <?= $client->total ?>
+            </li>
+        <?php endforeach; ?>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h2>Messages</h2>
+
+        <table>
+            <tr>
+                <th>ID</th>
+                <th>From</th>
+                <th>Employee</th>
+                <th>Client</th>
+                <th>Message</th>
+                <th>Status</th>
+                <th>Received At</th>
+            </tr>
+
+        <?php foreach ($messages as $msg): ?>
+            <tr class="<?= $msg->status === 'CALLOFF' ? 'calloff' : '' ?>">
+                <td><?= $msg->id ?></td>
+                <td><?= $msg->from ?></td>
+                <td><?= $msg->employee_name ?? 'Unknown' ?></td>
+                <td><?= $msg->client_name ?? 'N/A' ?></td>
+                <td><?= $msg->body ?></td>
+                <td class="status"><?= $msg->status ?? 'N/A' ?></td>
+                <td><?= $msg->created_at ?></td>
+            </tr>
+        <?php endforeach; ?>
+
+        </table>
+    </div>
+
+</div>
+</body>
+</html>

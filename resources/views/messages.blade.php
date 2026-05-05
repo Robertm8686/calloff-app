@@ -1,5 +1,10 @@
 <h1>Calloff Messages</h1>
 
+<p>
+    <a href="/messages">All Messages</a> |
+    <a href="/messages?calloff=1">Call Off Only</a>
+</p>
+
 <table border="1" cellpadding="10">
     <tr>
         <th>ID</th>

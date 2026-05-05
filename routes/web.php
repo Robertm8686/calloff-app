@@ -39,15 +39,22 @@ Route::post('/sms', function (Request $request) {
     return response('', 200);
 });
 
-Route::get('/messages', function () {
-    $messages = DB::table('messages')
+Route::get('/messages', function (Request $request) {
+
+    $query = DB::table('messages')
         ->leftJoin('employees', 'messages.from', '=', 'employees.phone')
         ->select(
             'messages.*',
             'employees.name as employee_name',
             'employees.client_name as client_name'
-        )
-        ->get();
+        );
+
+    // filter if ?calloff=1
+    if ($request->input('calloff') == 1) {
+        $query->where('messages.status', 'CALLOFF');
+    }
+
+    $messages = $query->get();
 
     return view('messages', ['messages' => $messages]);
 });

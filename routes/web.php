@@ -228,3 +228,7 @@ Route::post('/login', function (Illuminate\Http\Request $request) {
 
     return 'Login failed';
 });
+Route::get('/logout', function () {
+    session()->flush();
+    return redirect('/login');
+});

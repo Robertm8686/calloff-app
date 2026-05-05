@@ -1,3 +1,6 @@
+<p>
+    <a href="/logout">Logout</a>
+</p>
 <h1><?= ucfirst($client) ?> Dashboard</h1>
 
 <table border="1" cellpadding="10">

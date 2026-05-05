@@ -12,7 +12,7 @@
     </tr>
 
 <?php foreach ($messages as $msg): ?>
-<tr>
+<tr style="<?= $msg->status === 'CALLOFF' ? 'background-color: #ffcccc;' : '' ?>">
     <td><?= $msg->id ?></td>
     <td><?= $msg->from ?></td>
     <td><?= $msg->employee_name ?? 'Unknown' ?></td>

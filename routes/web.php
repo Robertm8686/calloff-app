@@ -6,53 +6,64 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
 Route::post('/sms', function (Request $request) {
+
     $message = strtolower($request->input('Body'));
     $from = $request->input('From');
 
     $status = (
-    str_contains($message, 'call off') ||
-    str_contains($message, 'call of') ||
-    str_contains($message, 'sick') ||
-    str_contains($message, 'not coming')
-) ? 'CALLOFF' : 'OTHER';
+        str_contains($message, 'call off') ||
+        str_contains($message, 'call of') ||
+        str_contains($message, 'sick') ||
+        str_contains($message, 'not coming')
+    ) ? 'CALLOFF' : 'OTHER';
 
-$alreadyCalledOffToday = DB::table('messages')
-    ->where('from', $from)
-    ->where('status', 'CALLOFF')
-    ->whereDate('created_at', today())
-    ->exists();
+    $alreadyCalledOffToday = DB::table('messages')
+        ->where('from', $from)
+        ->where('status', 'CALLOFF')
+        ->whereDate('created_at', today())
+        ->exists();
 
-if ($status === 'CALLOFF' && $alreadyCalledOffToday) {
-    return response('Duplicate call off ignored', 200);
-}
+    if ($status === 'CALLOFF' && $alreadyCalledOffToday) {
+        return response('Duplicate call off ignored', 200);
+    }
 
-DB::table('messages')->insert([
-    'from' => $from,
-    'body' => $message,
-    'status' => $status,
-    'created_at' => now(),
-    'updated_at' => now(),
-]);
+    DB::table('messages')->insert([
+        'from' => $from,
+        'body' => $message,
+        'status' => $status,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
 
     if ($status === 'CALLOFF') {
-        $employee = DB::table('employees')->where('phone', $from)->first();
+
+        $employee = DB::table('employees')
+            ->where('phone', $from)
+            ->first();
 
         $name = $employee ? $employee->name : 'Unknown Employee';
-        $clientName = $employee ? $employee->client_name : 'N/A';
+
+        $clientName = $employee
+            ? $employee->client_name
+            : 'N/A';
+
         $clientEmail = $employee && $employee->client_email
             ? $employee->client_email
             : 'kenji26m@gmail.com';
 
-        Mail::raw("Employee called off.\n\nName: $name\nClient: $clientName\nPhone: $from\nMessage: $message", function ($mail) use ($clientEmail) {
-            $mail->to($clientEmail)
-                ->subject('Call Off Alert');
-        });
+        Mail::raw(
+            "Employee called off.\n\nName: $name\nClient: $clientName\nPhone: $from\nMessage: $message",
+            function ($mail) use ($clientEmail) {
+                $mail->to($clientEmail)
+                    ->subject('Call Off Alert');
+            }
+        );
     }
 
     return response(
-    '<Response><Message>Your call-off has been received.</Message></Response>',
-    200
-)->header('Content-Type', 'text/xml');;
+        '<Response><Message>Your call-off has been received.</Message></Response>',
+        200
+    )->header('Content-Type', 'text/xml');
 });
 
 Route::get('/messages', function (Request $request) {
@@ -68,26 +79,27 @@ Route::get('/messages', function (Request $request) {
     if ($request->input('calloff') == 1) {
         $query->where('messages.status', 'CALLOFF');
     }
-if ($request->input('search')) {
-    $search = $request->input('search');
 
-    $query->where(function ($q) use ($search) {
-        $q->where('messages.from', 'like', "%$search%")
-          ->orWhere('employees.name', 'like', "%$search%")
-          ->orWhere('employees.client_name', 'like', "%$search%");
-    });
-}
+    if ($request->input('search')) {
+
+        $search = $request->input('search');
+
+        $query->where(function ($q) use ($search) {
+            $q->where('messages.from', 'like', "%$search%")
+              ->orWhere('employees.name', 'like', "%$search%")
+              ->orWhere('employees.client_name', 'like', "%$search%");
+        });
+    }
 
     $messages = $query
-    ->orderByDesc('messages.created_at')
-    ->get();
+        ->orderByDesc('messages.created_at')
+        ->get();
 
     $todayCalloffs = DB::table('messages')
         ->where('status', 'CALLOFF')
         ->whereDate('created_at', today())
         ->count();
 
-    // 🔥 NEW: group by client
     $clientSummary = DB::table('messages')
         ->leftJoin('employees', 'messages.from', '=', 'employees.phone')
         ->select('employees.client_name', DB::raw('count(*) as total'))
@@ -104,6 +116,7 @@ if ($request->input('search')) {
 });
 
 Route::get('/test-email', function () {
+
     Mail::raw('This is a test email from the Calloff App.', function ($message) {
         $message->to('kenji26m@gmail.com')
             ->subject('Calloff App Test Email');
@@ -113,8 +126,12 @@ Route::get('/test-email', function () {
 });
 
 Route::get('/employees', function () {
+
     $employees = DB::table('employees')->get();
-    return view('employees', ['employees' => $employees]);
+
+    return view('employees', [
+        'employees' => $employees
+    ]);
 });
 
 Route::get('/employees/create', function () {
@@ -122,6 +139,7 @@ Route::get('/employees/create', function () {
 });
 
 Route::post('/employees', function (Request $request) {
+
     DB::table('employees')->insert([
         'name' => $request->name,
         'phone' => $request->phone,
@@ -136,26 +154,40 @@ Route::post('/employees', function (Request $request) {
 });
 
 Route::get('/employees/{id}/edit', function ($id) {
-    $employee = DB::table('employees')->where('id', $id)->first();
-    return view('employees-edit', ['employee' => $employee]);
+
+    $employee = DB::table('employees')
+        ->where('id', $id)
+        ->first();
+
+    return view('employees-edit', [
+        'employee' => $employee
+    ]);
 });
 
 Route::post('/employees/{id}/update', function (Request $request, $id) {
-    DB::table('employees')->where('id', $id)->update([
-        'name' => $request->name,
-        'phone' => $request->phone,
-        'client_name' => $request->client_name,
-        'client_email' => $request->client_email,
-        'updated_at' => now(),
-    ]);
+
+    DB::table('employees')
+        ->where('id', $id)
+        ->update([
+            'name' => $request->name,
+            'phone' => $request->phone,
+            'client_name' => $request->client_name,
+            'client_email' => $request->client_email,
+            'updated_at' => now(),
+        ]);
 
     return redirect('/employees');
 });
 
 Route::get('/employees/delete/{id}', function ($id) {
-    DB::table('employees')->where('id', $id)->delete();
+
+    DB::table('employees')
+        ->where('id', $id)
+        ->delete();
+
     return redirect('/employees');
 });
+
 Route::get('/send-daily-summary', function () {
 
     $clients = DB::table('messages')
@@ -173,16 +205,20 @@ Route::get('/send-daily-summary', function () {
         ->groupBy('client_name');
 
     foreach ($clients as $clientName => $records) {
+
         $clientEmail = $records[0]->client_email ?? 'kenji26m@gmail.com';
 
         $body = "Daily Call-Off Summary\n\nClient: $clientName\n\n";
 
         foreach ($records as $r) {
+
             $name = $r->name ?? 'Unknown Employee';
+
             $body .= "- {$name} ({$r->created_at}): {$r->body}\n";
         }
 
         Mail::raw($body, function ($mail) use ($clientEmail, $clientName) {
+
             $mail->to($clientEmail)
                 ->subject("Daily Call-Off Summary - $clientName");
         });
@@ -190,6 +226,7 @@ Route::get('/send-daily-summary', function () {
 
     return "Summary emails sent";
 });
+
 Route::get('/client/{client}', function ($client) {
 
     if (session('client') !== $client) {
@@ -212,10 +249,13 @@ Route::get('/client/{client}', function ($client) {
         'client' => $client
     ]);
 });
+
 Route::get('/login', function () {
+
     return view('login');
 });
-Route::post('/login', function (Illuminate\Http\Request $request) {
+
+Route::post('/login', function (Request $request) {
 
     $client = DB::table('clients')
         ->where('email', $request->email)
@@ -223,14 +263,19 @@ Route::post('/login', function (Illuminate\Http\Request $request) {
 
     if ($client && $request->password === $client->password) {
 
-        session(['client' => $client->name]);
+        session([
+            'client' => $client->name
+        ]);
 
         return redirect('/client/' . $client->name);
     }
 
     return 'Login failed';
 });
-});Route::get('/logout', function () {
+
+Route::get('/logout', function () {
+
     session()->flush();
+
     return redirect('/login');
 });

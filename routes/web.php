@@ -282,3 +282,16 @@ Route::get('/logout', function () {
 Route::get('/debug-clients', function () {
     return DB::table('clients')->get();
 });
+Route::get('/seed-client', function () {
+    DB::table('clients')->updateOrInsert(
+        ['email' => 'castle@gmail.com'],
+        [
+            'name' => 'castle',
+            'password' => '1234',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]
+    );
+
+    return 'Client added';
+});

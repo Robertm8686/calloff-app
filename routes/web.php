@@ -217,18 +217,18 @@ Route::get('/login', function () {
 });
 Route::post('/login', function (Illuminate\Http\Request $request) {
 
-    $client = DB::table('employees')
-        ->where('client_email', $request->email)
+    $client = DB::table('clients')
+        ->where('email', $request->email)
         ->first();
 
-    if ($client && $request->password === '1234') {
-        session(['client' => $client->client_name]);
-        return redirect('/client/' . $client->client_name);
+    if ($client && $request->password === $client->password) {
+        session(['client' => $client->name]);
+
+        return redirect('/client/' . $client->name);
     }
 
     return 'Login failed';
-});
-Route::get('/logout', function () {
+});Route::get('/logout', function () {
     session()->flush();
     return redirect('/login');
 });

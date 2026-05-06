@@ -222,12 +222,14 @@ Route::post('/login', function (Illuminate\Http\Request $request) {
         ->first();
 
     if ($client && $request->password === $client->password) {
+
         session(['client' => $client->name]);
 
         return redirect('/client/' . $client->name);
     }
 
     return 'Login failed';
+});
 });Route::get('/logout', function () {
     session()->flush();
     return redirect('/login');

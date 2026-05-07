@@ -121,7 +121,7 @@
     </form>
 </div>
         <a class="button secondary" href="/messages?calloff=1">Call Off Only</a>
-        <a class="button secondary" href="/employees">Employees</a>
+        <a class="button secondary" href="/employees">Employees</a><a class="button secondary" href="/clients">Clients</a>
         <a class="button secondary" href="/send-daily-summary">Send Daily Summary</a>
     </div>
 <div class="card">

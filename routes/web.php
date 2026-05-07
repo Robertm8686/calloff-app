@@ -295,3 +295,26 @@ Route::get('/seed-client', function () {
 
     return 'Client added';
 });
+Route::get('/clients', function () {
+    $clients = DB::table('clients')->get();
+
+    return view('clients', [
+        'clients' => $clients
+    ]);
+});
+
+Route::get('/clients/create', function () {
+    return view('clients-create');
+});
+
+Route::post('/clients', function (Request $request) {
+    DB::table('clients')->insert([
+        'name' => strtolower($request->name),
+        'email' => $request->email,
+        'password' => $request->password,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    return redirect('/clients');
+});

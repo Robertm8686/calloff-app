@@ -10,12 +10,44 @@ Route::post('/sms', function (Request $request) {
     $message = strtolower($request->input('Body'));
     $from = $request->input('From');
 
-    $status = (
-        str_contains($message, 'call off') ||
-        str_contains($message, 'call of') ||
-        str_contains($message, 'sick') ||
-        str_contains($message, 'not coming')
-    ) ? 'CALLOFF' : 'OTHER';
+$calloffPhrases = [
+    'call off',
+    'call of',
+    'called off',
+    'calling off',
+    'sick',
+    'not coming',
+    'not coming in',
+    'cant make it',
+    "can't make it",
+    'cannot make it',
+    'wont make it',
+    "won't make it",
+    'cant come in',
+    "can't come in",
+    'cannot come in',
+    'not going in',
+    'miss work',
+    'missing work',
+    'out today',
+    'car broke down',
+    'family emergency',
+    'emergency',
+    'no ride',
+    'running a fever',
+    'throwing up',
+    'injured',
+    'hospital',
+];
+
+$status = 'OTHER';
+
+foreach ($calloffPhrases as $phrase) {
+    if (str_contains($message, $phrase)) {
+        $status = 'CALLOFF';
+        break;
+    }
+}
 
     $alreadyCalledOffToday = DB::table('messages')
         ->where('from', $from)

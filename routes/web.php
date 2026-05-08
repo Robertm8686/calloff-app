@@ -373,3 +373,24 @@ Route::post('/clients', function (Request $request) {
 
     return redirect('/clients');
 });
+Route::post('/voice', function (Request $request) {
+    $twiml = '<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <Say voice="alice">Please leave your call off message after the beep. When you are finished, hang up.</Say>
+    <Record maxLength="120" action="/voice-recording" method="POST" />
+</Response>';
+
+    return response($twiml, 200)->header('Content-Type', 'text/xml');
+});
+Route::post('/voice-recording', function (Request $request) {
+    $from = $request->input('From');
+    $recordingUrl = $request->input('RecordingUrl');
+
+    Mail::raw("Voice call-off received.\n\nFrom: $from\nRecording: $recordingUrl", function ($mail) {
+        $mail->to('kenji26m@gmail.com')
+            ->subject('Voice Call-Off Alert');
+    });
+
+    return response('<?xml version="1.0" encoding="UTF-8"?><Response><Say>Thank you. Your message has been received.</Say></Response>', 200)
+        ->header('Content-Type', 'text/xml');
+});

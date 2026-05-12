@@ -367,6 +367,10 @@ Route::post('/clients', function (Request $request) {
         'name' => strtolower($request->name),
         'email' => $request->email,
         'password' => $request->password,
+'notification_email' => $request->notification_email,
+'notification_phone' => $request->notification_phone,
+'notify_email' => $request->has('notify_email'),
+'notify_sms' => $request->has('notify_sms'),
         'created_at' => now(),
         'updated_at' => now(),
     ]);

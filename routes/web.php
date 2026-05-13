@@ -103,17 +103,18 @@ foreach ($calloffPhrases as $phrase) {
             ? $employee->client_name
             : 'N/A';
 
-        $clientEmail = $employee && $employee->client_email
-            ? $employee->client_email
-            : 'kenji26m@gmail.com';
+$client = DB::table('clients')
+    ->where('name', strtolower($clientName))
+    ->first();
 
-        Mail::raw(
-            "Employee called off.\n\nName: $name\nClient: $clientName\nPhone: $from\nMessage: $message",
-            function ($mail) use ($clientEmail) {
-                $mail->to($clientEmail)
-                    ->subject('Call Off Alert');
-            }
-        );
+$emailBody = "Employee called off.\n\nName: $name\nClient: $clientName\nPhone: $from\nMessage: $message";
+
+if ($client && $client->notify_email && $client->notification_email) {
+    Mail::raw($emailBody, function ($mail) use ($client) {
+        $mail->to($client->notification_email)
+            ->subject('Call Off Alert');
+    });
+}
     }
 
     return response(

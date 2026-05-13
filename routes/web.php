@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Artisan;
 
 Route::post('/sms', function (Request $request) {
 
@@ -397,4 +398,8 @@ Route::post('/voice-recording', function (Request $request) {
 
     return response('<?xml version="1.0" encoding="UTF-8"?><Response><Say>Thank you. Your message has been received.</Say></Response>', 200)
         ->header('Content-Type', 'text/xml');
+});
+Route::get('/run-migrations', function () {
+    Artisan::call('migrate', ['--force' => true]);
+    return nl2br(Artisan::output());
 });

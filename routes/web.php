@@ -376,6 +376,14 @@ Route::post('/clients', function (Request $request) {
         'created_at' => now(),
         'updated_at' => now(),
     ]);
+Route::get('/clients/delete/{id}', function ($id) {
+
+    DB::table('clients')
+        ->where('id', $id)
+        ->delete();
+
+    return redirect('/clients');
+});
 
     return redirect('/clients');
 });

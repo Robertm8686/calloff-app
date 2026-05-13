@@ -365,25 +365,27 @@ Route::get('/clients/create', function () {
 });
 
 Route::post('/clients', function (Request $request) {
+
     DB::table('clients')->insert([
         'name' => strtolower($request->name),
         'email' => $request->email,
         'password' => $request->password,
-'notification_email' => $request->notification_email,
-'notification_phone' => $request->notification_phone,
-'notify_email' => $request->has('notify_email'),
-'notify_sms' => $request->has('notify_sms'),
+        'notification_email' => $request->notification_email,
+        'notification_phone' => $request->notification_phone,
+        'notify_email' => $request->has('notify_email'),
+        'notify_sms' => $request->has('notify_sms'),
         'created_at' => now(),
         'updated_at' => now(),
     ]);
+
+    return redirect('/clients');
+});
+
 Route::get('/clients/delete/{id}', function ($id) {
 
     DB::table('clients')
         ->where('id', $id)
         ->delete();
-
-    return redirect('/clients');
-});
 
     return redirect('/clients');
 });

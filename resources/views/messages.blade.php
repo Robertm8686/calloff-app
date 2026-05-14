@@ -186,7 +186,6 @@
                 <th>Message</th>
  		<th>Recording</th>
                 <th>Status</th>
-                <th>Received At</th> !!!!!!
 <th>Received At</th>
 <th>Acknowledged</th>
 <th>Resolved</th>

@@ -442,26 +442,60 @@ Route::get('/clients/delete/{id}', function ($id) {
 
     return redirect('/clients');
 });
-Route::post('/voice', function (Request $request) {
-    $twiml = '<?xml version="1.0" encoding="UTF-8"?>
-<Response>
-    <Say voice="alice">Please leave your call off message after the beep. When you are finished, hang up.</Say>
-    <Record maxLength="120" action="/voice-recording" method="POST" />
-</Response>';
+Route::post('/voice', function () {
 
-    return response($twiml, 200)->header('Content-Type', 'text/xml');
+    return response('
+<Response>
+
+    <Say voice="alice">
+        Please leave your call off message after the beep.
+        Para español, deje su mensaje después del tono.
+    </Say>
+
+    <Record
+        maxLength="60"
+        playBeep="true"
+        recordingStatusCallback="/voice-recording"
+    />
+
+</Response>
+', 200)->header('Content-Type', 'text/xml');
+
 });
 Route::post('/voice-recording', function (Request $request) {
-    $from = $request->input('From');
-    $recordingUrl = $request->input('RecordingUrl');
 
-    Mail::raw("Voice call-off received.\n\nFrom: $from\nRecording: $recordingUrl", function ($mail) {
-        $mail->to('kenji26m@gmail.com')
-            ->subject('Voice Call-Off Alert');
-    });
+    $from = $request->From;
+    $recordingUrl = $request->RecordingUrl;
 
-    return response('<?xml version="1.0" encoding="UTF-8"?><Response><Say>Thank you. Your message has been received.</Say></Response>', 200)
-        ->header('Content-Type', 'text/xml');
+    $employee = DB::table('employees')
+        ->where('phone', $from)
+        ->first();
+
+    $name = $employee->name ?? 'Unknown';
+    $clientName = $employee->client_name ?? 'Unknown';
+
+    DB::table('messages')->insert([
+        'from' => $from,
+        'body' => 'Voice call received',
+        'status' => 'CALLOFF',
+        'employee_name' => $name,
+        'client_name' => $clientName,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    Mail::raw(
+        "Voice Call Off Received\n\nEmployee: $name\nClient: $clientName\nPhone: $from\n\nRecording:\n$recordingUrl",
+        function ($mail) use ($employee) {
+
+            $email = $employee->client_email ?? 'kenji26m@gmail.com';
+
+            $mail->to($email)
+                ->subject('Voice Call Off Alert');
+        }
+    );
+
+    return response('OK', 200);
 });
 Route::get('/run-migrations', function () {
     Artisan::call('migrate', ['--force' => true]);

@@ -366,7 +366,34 @@ Route::get('/clients', function () {
 Route::get('/clients/create', function () {
     return view('clients-create');
 });
+Route::get('/clients/{id}/edit', function ($id) {
 
+    $client = DB::table('clients')
+        ->where('id', $id)
+        ->first();
+
+    return view('clients-edit', [
+        'client' => $client
+    ]);
+});
+
+Route::post('/clients/{id}/update', function (Request $request, $id) {
+
+    DB::table('clients')
+        ->where('id', $id)
+        ->update([
+            'name' => strtolower($request->name),
+            'email' => $request->email,
+            'password' => $request->password,
+            'notification_email' => $request->notification_email,
+            'notification_phone' => $request->notification_phone,
+            'notify_email' => $request->has('notify_email'),
+            'notify_sms' => $request->has('notify_sms'),
+            'updated_at' => now(),
+        ]);
+
+    return redirect('/clients');
+});
 Route::post('/clients', function (Request $request) {
 
     DB::table('clients')->insert([

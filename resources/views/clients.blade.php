@@ -24,6 +24,7 @@
 </td>
 
 <td>
+    <a href="/clients/{{ $client->id }}/edit">Edit</a> |
     <a href="/clients/delete/{{ $client->id }}"
        onclick="return confirm('Delete this client?')">
        Delete

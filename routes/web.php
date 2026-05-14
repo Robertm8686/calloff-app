@@ -125,7 +125,18 @@ if ($client && $client->notify_email && $client->notification_email) {
         200
     )->header('Content-Type', 'text/xml');
 });
+Route::get('/messages/{id}/acknowledge', function ($id) {
 
+    DB::table('messages')
+        ->where('id', $id)
+        ->update([
+            'acknowledged' => true,
+            'acknowledged_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+    return redirect('/messages');
+});
 Route::get('/messages', function (Request $request) {
 
     $query = DB::table('messages')

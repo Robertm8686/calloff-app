@@ -186,6 +186,8 @@
                 <th>Message</th>
                 <th>Status</th>
                 <th>Received At</th>
+<th>Acknowledged</th>
+<th>Action</th>
             </tr>
 
         <?php foreach ($messages as $msg): ?>
@@ -236,6 +238,22 @@
 
 </td>
                 <td><?= date('m/d/Y g:i A', strtotime($msg->created_at)) ?></td>
+<td>
+    <?php if ($msg->acknowledged): ?>
+        Yes<br>
+        <?= date('m/d/Y g:i A', strtotime($msg->acknowledged_at)) ?>
+    <?php else: ?>
+        No
+    <?php endif; ?>
+</td>
+
+<td>
+    <?php if (!$msg->acknowledged && $msg->status === 'CALLOFF'): ?>
+        <a href="/messages/<?= $msg->id ?>/acknowledge">Acknowledge</a>
+    <?php else: ?>
+        —
+    <?php endif; ?>
+</td>
             </tr>
         <?php endforeach; ?>
 

@@ -184,6 +184,7 @@
                 <th>Employee</th>
                 <th>Client</th>
                 <th>Message</th>
+ 		<th>Recording</th>
                 <th>Status</th>
                 <th>Received At</th> !!!!!!
 <th>Received At</th>
@@ -199,6 +200,13 @@
     <td><?= $msg->employee_name ?? 'Unknown' ?></td>
     <td><?= $msg->client_name ?? 'N/A' ?></td>
     <td><?= $msg->body ?></td>
+<td>
+    <?php if (!empty($msg->recording_url)): ?>
+        <a href="<?= $msg->recording_url ?>" target="_blank">Listen</a>
+    <?php else: ?>
+        —
+    <?php endif; ?>
+</td>
 
 <td>
 

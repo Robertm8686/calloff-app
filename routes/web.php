@@ -79,9 +79,9 @@ foreach ($calloffPhrases as $phrase) {
         ->whereDate('created_at', today())
         ->exists();
 
-    if ($status === 'CALLOFF' && $alreadyCalledOffToday) {
-        return response('Duplicate call off ignored', 200);
-    }
+// if ($status === 'CALLOFF' && $alreadyCalledOffToday) {
+//     return response('Duplicate call off ignored', 200);
+// }
 
     DB::table('messages')->insert([
         'from' => $from,

@@ -195,16 +195,45 @@
                 <td><?= $msg->employee_name ?? 'Unknown' ?></td>
                 <td><?= $msg->client_name ?? 'N/A' ?></td>
                 <td><?= $msg->body ?></td>
-                <td>
-    <?php if ($msg->status === 'CALLOFF'): ?>
-        <span style="background:#dc2626;color:white;padding:4px 8px;border-radius:6px;font-weight:bold;">
-            CALLOFF
-        </span>
-    <?php else: ?>
-        <span style="background:#e5e7eb;color:#374151;padding:4px 8px;border-radius:6px;">
-            <?= $msg->status ?? 'N/A' ?>
-        </span>
-    <?php endif; ?>
+<td>
+
+<?php if ($msg->status === 'CALLOFF'): ?>
+
+    <span style="
+        background:#dc2626;
+        color:white;
+        padding:4px 8px;
+        border-radius:6px;
+        font-weight:bold;
+    ">
+        CALLOFF
+    </span>
+
+<?php elseif ($msg->status === 'DUPLICATE'): ?>
+
+    <span style="
+        background:#f59e0b;
+        color:white;
+        padding:4px 8px;
+        border-radius:6px;
+        font-weight:bold;
+    ">
+        DUPLICATE
+    </span>
+
+<?php else: ?>
+
+    <span style="
+        background:#e5e7eb;
+        color:#374151;
+        padding:4px 8px;
+        border-radius:6px;
+    ">
+        <?= $msg->status ?? 'N/A' ?>
+    </span>
+
+<?php endif; ?>
+
 </td>
                 <td><?= date('m/d/Y g:i A', strtotime($msg->created_at)) ?></td>
             </tr>

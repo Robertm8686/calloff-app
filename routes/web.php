@@ -474,15 +474,14 @@ Route::post('/voice-recording', function (Request $request) {
     $name = $employee->name ?? 'Unknown';
     $clientName = $employee->client_name ?? 'Unknown';
 
-    DB::table('messages')->insert([
-        'from' => $from,
-        'body' => 'Voice call received',
-        'status' => 'CALLOFF',
-        'employee_name' => $name,
-        'client_name' => $clientName,
-        'created_at' => now(),
-        'updated_at' => now(),
-    ]);
+DB::table('messages')->insert([
+    'from' => $from,
+    'body' => 'Voice call received',
+    'status' => 'CALLOFF',
+    'recording_url' => $recordingUrl,
+    'created_at' => now(),
+    'updated_at' => now(),
+]);
 
     Mail::raw(
         "Voice Call Off Received\n\nEmployee: $name\nClient: $clientName\nPhone: $from\n\nRecording:\n$recordingUrl",

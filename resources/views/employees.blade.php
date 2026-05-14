@@ -20,7 +20,7 @@
     <td>{{ $emp->client_name }}</td>
     <td>{{ $emp->client_email }}</td>
     <td>
-        <a href="/employees/edit/{{ $emp->id }}">Edit</a> |
+        <a href="/employees/{{ $emp->id }}/edit">Edit</a> |
         <a href="/employees/delete/{{ $emp->id }}" 
    onclick="return confirm('Are you sure you want to delete this employee?')">
    Delete

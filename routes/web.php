@@ -231,7 +231,7 @@ Route::post('/employees/{id}/update', function (Request $request, $id) {
         ->update([
             'name' => $request->name,
             'phone' => $request->phone,
-            'client_name' => $request->client_name,
+            'client_name' => strtolower($request->client_name),
             'client_email' => $request->client_email,
             'updated_at' => now(),
         ]);

@@ -519,13 +519,59 @@ Route::post('/voice-recording', function (Request $request) {
         $transcriptionStatus = 'failed';
     }
 
-    DB::table('messages')
-        ->where('id', $messageId)
-        ->update([
-            'transcription' => $transcriptionText,
-            'transcription_status' => $transcriptionStatus,
-            'updated_at' => now(),
-        ]);
+$voiceStatus = 'OTHER';
+
+if ($transcriptionText) {
+
+    $transcriptionLower = strtolower($transcriptionText);
+
+    $calloffPhrases = [
+        'call off',
+        'sick',
+        'not coming',
+        'cant make it',
+        "can't make it",
+        'cannot make it',
+        'family emergency',
+        'hospital',
+        'no puedo ir',
+        'no voy a ir',
+        'estoy enfermo',
+        'estoy enferma',
+        'no puedo trabajar',
+        'tengo fiebre',
+        'emergencia familiar'
+    ];
+
+    foreach ($calloffPhrases as $phrase) {
+
+        if (str_contains($transcriptionLower, $phrase)) {
+
+            $voiceStatus = 'CALLOFF';
+            break;
+        }
+    }
+}
+
+$alreadyCalledOffToday = DB::table('messages')
+    ->where('from', $from)
+    ->where('status', 'CALLOFF')
+    ->whereDate('created_at', today())
+    ->where('id', '!=', $messageId)
+    ->exists();
+
+if ($voiceStatus === 'CALLOFF' && $alreadyCalledOffToday) {
+    $voiceStatus = 'DUPLICATE';
+}
+
+DB::table('messages')
+    ->where('id', $messageId)
+    ->update([
+        'status' => $voiceStatus,
+        'transcription' => $transcriptionText,
+        'transcription_status' => $transcriptionStatus,
+        'updated_at' => now(),
+    ]);
 
     $emailBody = "Voice Call Off Received\n\n"
         . "Employee: $name\n"

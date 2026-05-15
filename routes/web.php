@@ -5,6 +5,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Http;
 
 Route::post('/sms', function (Request $request) {
 
@@ -474,25 +475,74 @@ Route::post('/voice-recording', function (Request $request) {
     $name = $employee->name ?? 'Unknown';
     $clientName = $employee->client_name ?? 'Unknown';
 
-DB::table('messages')->insert([
-    'from' => $from,
-    'body' => 'Voice call received',
-    'status' => 'CALLOFF',
-    'recording_url' => $recordingUrl,
-    'created_at' => now(),
-    'updated_at' => now(),
-]);
+    $messageId = DB::table('messages')->insertGetId([
+        'from' => $from,
+        'body' => 'Voice call received',
+        'status' => 'CALLOFF',
+        'recording_url' => $recordingUrl,
+        'transcription_status' => 'pending',
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
 
-    Mail::raw(
-        "Voice Call Off Received\n\nEmployee: $name\nClient: $clientName\nPhone: $from\n\nRecording:\n$recordingUrl",
-        function ($mail) use ($employee) {
+    $transcriptionText = null;
+    $transcriptionStatus = 'failed';
 
-            $email = $employee->client_email ?? 'kenji26m@gmail.com';
+    try {
+        $audioUrl = $recordingUrl . '.mp3';
 
-            $mail->to($email)
-                ->subject('Voice Call Off Alert');
+        $audioResponse = Http::withBasicAuth(
+            env('TWILIO_ACCOUNT_SID'),
+            env('TWILIO_AUTH_TOKEN')
+        )->get($audioUrl);
+
+        if ($audioResponse->successful()) {
+
+            $transcriptionResponse = Http::withToken(env('OPENAI_API_KEY'))
+                ->attach(
+                    'file',
+                    $audioResponse->body(),
+                    'recording.mp3'
+                )
+                ->post('https://api.openai.com/v1/audio/transcriptions', [
+                    'model' => 'whisper-1',
+                    'response_format' => 'json',
+                ]);
+
+            if ($transcriptionResponse->successful()) {
+                $transcriptionText = $transcriptionResponse->json('text');
+                $transcriptionStatus = 'complete';
+            }
         }
-    );
+
+    } catch (\Exception $e) {
+        $transcriptionStatus = 'failed';
+    }
+
+    DB::table('messages')
+        ->where('id', $messageId)
+        ->update([
+            'transcription' => $transcriptionText,
+            'transcription_status' => $transcriptionStatus,
+            'updated_at' => now(),
+        ]);
+
+    $emailBody = "Voice Call Off Received\n\n"
+        . "Employee: $name\n"
+        . "Client: $clientName\n"
+        . "Phone: $from\n\n"
+        . "Transcription:\n"
+        . ($transcriptionText ?? 'Transcription unavailable') . "\n\n"
+        . "Recording:\n"
+        . $recordingUrl;
+
+    Mail::raw($emailBody, function ($mail) use ($employee) {
+
+        $email = $employee->client_email ?? 'kenji26m@gmail.com';
+
+        $mail->to($email)
+            ->subject('Voice Call Off Alert');
+    });
 
     return response('OK', 200);
 });

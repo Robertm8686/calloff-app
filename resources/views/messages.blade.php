@@ -185,6 +185,7 @@
                 <th>Client</th>
                 <th>Message</th>
  		<th>Recording</th>
+		<th>Transcription</th>
                 <th>Status</th>
 <th>Received At</th>
 <th>Acknowledged</th>
@@ -204,6 +205,13 @@
         <a href="<?= $msg->recording_url ?>" target="_blank">Listen</a>
     <?php else: ?>
         —
+    <?php endif; ?>
+</td>
+<td>
+    <?php if (!empty($msg->transcription)): ?>
+        <?= $msg->transcription ?>
+    <?php else: ?>
+        <?= $msg->transcription_status ?? 'pending' ?>
     <?php endif; ?>
 </td>
 

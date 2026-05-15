@@ -10,10 +10,10 @@
             padding: 30px;
         }
 
-        .container {
-            max-width: 1100px;
-            margin: auto;
-        }
+.container {
+    max-width: 1400px;
+    margin: auto;
+}
 
         .card {
             background: white;
@@ -60,11 +60,15 @@
             background: #6b7280;
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-        }
+table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: auto;
+}
+
+.card {
+    overflow-x: auto;
+}
 
         th {
             background: #111827;

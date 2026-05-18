@@ -573,6 +573,12 @@ DB::table('messages')
         'updated_at' => now(),
     ]);
 
+if ($voiceStatus === 'CALLOFF') {
+
+    $client = DB::table('clients')
+        ->where('name', strtolower($clientName))
+        ->first();
+
     $emailBody = "Voice Call Off Received\n\n"
         . "Employee: $name\n"
         . "Client: $clientName\n"
@@ -582,13 +588,17 @@ DB::table('messages')
         . "Recording:\n"
         . $recordingUrl;
 
-    Mail::raw($emailBody, function ($mail) use ($employee) {
+    if ($client && $client->notify_email && $client->notification_email) {
 
-        $email = $employee->client_email ?? 'kenji26m@gmail.com';
+        Mail::raw($emailBody, function ($mail) use ($client) {
 
-        $mail->to($email)
-            ->subject('Voice Call Off Alert');
-    });
+            $mail->to($client->notification_email)
+                ->subject('Voice Call Off Alert');
+
+        });
+
+    }
+}
 
     return response('OK', 200);
 });

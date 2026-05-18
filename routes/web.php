@@ -128,7 +128,7 @@ Route::post('/sms', function (Request $request) {
         try {
             Http::withHeaders([
                 'Content-Type' => 'application/json',
-                'api_key' => env('BASE44_API_KEY'),
+                'api-key' => env('BASE44_API_KEY'),
             ])->post(
                 'https://api.base44.com/api/apps/' . env('BASE44_APP_ID') . '/entities/CallOff',
                 [

@@ -161,6 +161,48 @@ try {
     // silently fail for now
 
 }
+try {
+
+    Http::withHeaders([
+        'Content-Type' => 'application/json',
+        'api_key' => env('BASE44_API_KEY'),
+    ])->post(
+        'https://api.base44.com/api/apps/'
+        . env('BASE44_APP_ID')
+        . '/entities/CallOff',
+        [
+
+            'caller_phone' => $from,
+            'source' => 'sms',
+            'detected_status' => $finalStatus,
+
+            'employee_name' => $name,
+            'client_name' => $clientName,
+
+            'call_off_date' => now()->format('Y-m-d'),
+
+            'reason' => 'other',
+
+            'method' => 'text',
+
+            'raw_message' => $message,
+
+            'notification_sent' => true,
+
+            'notification_email' =>
+                $client->notification_email ?? null,
+
+            'duplicate' =>
+                $finalStatus === 'DUPLICATE',
+
+        ]
+    );
+
+} catch (\Exception $e) {
+
+    // silently fail for now
+
+}
     }
 
     return response(

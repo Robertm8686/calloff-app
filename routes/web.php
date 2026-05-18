@@ -12,67 +12,67 @@ Route::post('/sms', function (Request $request) {
     $message = strtolower($request->input('Body'));
     $from = $request->input('From');
 
-$calloffPhrases = [
-    'call off',
-    'call of',
-    'called off',
-    'calling off',
-    'sick',
-    'not coming',
-    'not coming in',
-    'cant make it',
-    "can't make it",
-    'cannot make it',
-    'wont make it',
-    "won't make it",
-    'cant come in',
-    "can't come in",
-    'cannot come in',
-    'not going in',
-    'miss work',
-    'missing work',
-    'out today',
-    'car broke down',
-    'family emergency',
-    'emergency',
-    'no ride',
-    'running a fever',
-    'throwing up',
-    'injured',
-    'hospital',
-'no puedo ir',
-'no puedo llegar',
-'no voy a ir',
-'no ire',
-'no iré',
-'no puedo trabajar',
-'me siento enfermo',
-'me siento enferma',
-'estoy enfermo',
-'estoy enferma',
-'estoy malo',
-'estoy mala',
-'me enferme',
-'me enfermé',
-'tengo fiebre',
-'vomitando',
-'tengo emergencia',
-'emergencia familiar',
-'se me descompuso el carro',
-'no tengo transporte',
-'no tengo ride',
-'no puedo presentarme',
-'no puedo asistir',
-];
+    $calloffPhrases = [
+        'call off',
+        'call of',
+        'called off',
+        'calling off',
+        'sick',
+        'not coming',
+        'not coming in',
+        'cant make it',
+        "can't make it",
+        'cannot make it',
+        'wont make it',
+        "won't make it",
+        'cant come in',
+        "can't come in",
+        'cannot come in',
+        'not going in',
+        'miss work',
+        'missing work',
+        'out today',
+        'car broke down',
+        'family emergency',
+        'emergency',
+        'no ride',
+        'running a fever',
+        'throwing up',
+        'injured',
+        'hospital',
+        'no puedo ir',
+        'no puedo llegar',
+        'no voy a ir',
+        'no ire',
+        'no iré',
+        'no puedo trabajar',
+        'me siento enfermo',
+        'me siento enferma',
+        'estoy enfermo',
+        'estoy enferma',
+        'estoy malo',
+        'estoy mala',
+        'me enferme',
+        'me enfermé',
+        'tengo fiebre',
+        'vomitando',
+        'tengo emergencia',
+        'emergencia familiar',
+        'se me descompuso el carro',
+        'no tengo transporte',
+        'no tengo ride',
+        'no puedo presentarme',
+        'no puedo asistir',
+    ];
 
-$status = 'OTHER';
+    $status = 'OTHER';
 
-foreach ($calloffPhrases as $phrase) {
-    if (str_contains($message, $phrase)) {
-        $status = 'CALLOFF';
-        break;
+    foreach ($calloffPhrases as $phrase) {
+        if (str_contains($message, $phrase)) {
+            $status = 'CALLOFF';
+            break;
+        }
     }
-}
 
     $alreadyCalledOffToday = DB::table('messages')
         ->where('from', $from)
@@ -80,129 +80,77 @@ foreach ($calloffPhrases as $phrase) {
         ->whereDate('created_at', today())
         ->exists();
 
+    $finalStatus = $status;
 
-$finalStatus = $status;
+    if ($status === 'CALLOFF' && $alreadyCalledOffToday) {
+        $finalStatus = 'DUPLICATE';
+    }
 
-if ($status === 'CALLOFF' && $alreadyCalledOffToday) {
-    $finalStatus = 'DUPLICATE';
-}
+    $messageId = DB::table('messages')->insertGetId([
+        'from' => $from,
+        'body' => $message,
+        'status' => $finalStatus,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
 
-DB::table('messages')->insert([
-    'from' => $from,
-    'body' => $message,
-    'status' => $finalStatus,
-    'created_at' => now(),
-    'updated_at' => now(),
-]);
+    $employee = DB::table('employees')
+        ->where('phone', $from)
+        ->first();
+
+    $name = $employee ? $employee->name : 'Unknown Employee';
+
+    $clientName = $employee
+        ? $employee->client_name
+        : 'N/A';
+
+    $client = DB::table('clients')
+        ->where('name', strtolower($clientName))
+        ->first();
+
+    $notificationSent = false;
 
     if ($finalStatus === 'CALLOFF') {
 
-        $employee = DB::table('employees')
-            ->where('phone', $from)
-            ->first();
+        $emailBody = "Employee called off.\n\nName: $name\nClient: $clientName\nPhone: $from\nMessage: $message";
 
-        $name = $employee ? $employee->name : 'Unknown Employee';
+        if ($client && $client->notify_email && $client->notification_email) {
+            Mail::raw($emailBody, function ($mail) use ($client) {
+                $mail->to($client->notification_email)
+                    ->subject('Call Off Alert');
+            });
 
-        $clientName = $employee
-            ? $employee->client_name
-            : 'N/A';
+            $notificationSent = true;
+        }
+    }
 
-$client = DB::table('clients')
-    ->where('name', strtolower($clientName))
-    ->first();
-
-$emailBody = "Employee called off.\n\nName: $name\nClient: $clientName\nPhone: $from\nMessage: $message";
-
-if ($client && $client->notify_email && $client->notification_email) {
-    Mail::raw($emailBody, function ($mail) use ($client) {
-        $mail->to($client->notification_email)
-            ->subject('Call Off Alert');
-    });
-}
-try {
-
-    Http::withHeaders([
-        'Content-Type' => 'application/json',
-        'api_key' => env('BASE44_API_KEY'),
-    ])->post(
-        'https://api.base44.com/api/apps/'
-        . env('BASE44_APP_ID')
-        . '/entities/CallOff',
-        [
-
-            'caller_phone' => $from,
-            'source' => 'sms',
-            'detected_status' => $finalStatus,
-
-            'employee_name' => $name,
-            'client_name' => $clientName,
-
-            'call_off_date' => now()->format('Y-m-d'),
-
-            'reason' => 'other',
-
-            'method' => 'text',
-
-            'raw_message' => $message,
-
-            'notification_sent' => true,
-
-            'notification_email' =>
-                $client->notification_email ?? null,
-
-            'duplicate' =>
-                $finalStatus === 'DUPLICATE',
-
-        ]
-    );
-
-} catch (\Exception $e) {
-
-    // silently fail for now
-
-}
-try {
-
-    Http::withHeaders([
-        'Content-Type' => 'application/json',
-        'api_key' => env('BASE44_API_KEY'),
-    ])->post(
-        'https://api.base44.com/api/apps/'
-        . env('BASE44_APP_ID')
-        . '/entities/CallOff',
-        [
-
-            'caller_phone' => $from,
-            'source' => 'sms',
-            'detected_status' => $finalStatus,
-
-            'employee_name' => $name,
-            'client_name' => $clientName,
-
-            'call_off_date' => now()->format('Y-m-d'),
-
-            'reason' => 'other',
-
-            'method' => 'text',
-
-            'raw_message' => $message,
-
-            'notification_sent' => true,
-
-            'notification_email' =>
-                $client->notification_email ?? null,
-
-            'duplicate' =>
-                $finalStatus === 'DUPLICATE',
-
-        ]
-    );
-
-} catch (\Exception $e) {
-
-    // silently fail for now
-
-}
+    if ($finalStatus === 'CALLOFF' || $finalStatus === 'DUPLICATE') {
+        try {
+            Http::withHeaders([
+                'Content-Type' => 'application/json',
+                'api_key' => env('BASE44_API_KEY'),
+            ])->post(
+                'https://api.base44.com/api/apps/' . env('BASE44_APP_ID') . '/entities/CallOff',
+                [
+                    'caller_phone' => $from,
+                    'source' => 'sms',
+                    'detected_status' => $finalStatus,
+                    'employee_name' => $name,
+                    'client_name' => $clientName,
+                    'call_off_date' => now()->format('Y-m-d'),
+                    'reason' => 'other',
+                    'method' => 'text',
+                    'raw_message' => $message,
+                    'notes' => $message,
+                    'notification_sent' => $notificationSent,
+                    'notification_email' => $client->notification_email ?? null,
+                    'duplicate' => $finalStatus === 'DUPLICATE',
+                    'render_message_id' => (string) $messageId,
+                ]
+            );
+        } catch (\Exception $e) {
+            // Ignore Base44 sync failure for now
+        }
     }
 
     return response(

@@ -377,6 +377,15 @@ Route::get('/send-daily-summary', function () {
         'calloffs' => $calloffs
     ]);
 });
+Route::get('/testing-checklist', function () {
+
+    if (!session('admin_logged_in')) {
+        return redirect('/admin-login');
+    }
+
+    return view('testing-checklist');
+
+});
 
 /*
 |--------------------------------------------------------------------------

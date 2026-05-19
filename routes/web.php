@@ -252,6 +252,26 @@ Route::get('/messages', function (Request $request) {
         'clientSummary' => $clientSummary
     ]);
 });
+Route::get('/calendar', function () {
+
+    if (!session('admin_logged_in')) {
+        return redirect('/admin-login');
+    }
+
+    $calloffs = DB::table('messages')
+        ->leftJoin('employees', 'messages.from', '=', 'employees.phone')
+        ->select(
+            'messages.*',
+            'employees.name as employee_name',
+            'employees.client_name as client_name'
+        )
+        ->where('messages.status', 'CALLOFF')
+        ->latest()
+        ->get();
+
+    return view('calendar', compact('calloffs'));
+
+});
 
 /*
 |--------------------------------------------------------------------------

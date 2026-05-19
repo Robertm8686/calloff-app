@@ -128,7 +128,7 @@ Route::post('/sms', function (Request $request) {
         try {
             $response = Http::withHeaders([
                 'Content-Type' => 'application/json',
-                'api-key' => env('BASE44_API_KEY'),
+                'api_key' => env('BASE44_API_KEY'),
             ])->post(
                 'https://api.base44.com/api/apps/' . env('BASE44_APP_ID') . '/entities/CallOff',
                 [
@@ -318,41 +318,24 @@ Route::get('/employees/delete/{id}', function ($id) {
 
 Route::get('/send-daily-summary', function () {
 
-    $clients = DB::table('messages')
+    $today = now()->toDateString();
+
+    $calloffs = DB::table('messages')
         ->leftJoin('employees', 'messages.from', '=', 'employees.phone')
         ->select(
-            'employees.client_name',
-            'employees.client_email',
-            'employees.name',
-            'messages.body',
-            'messages.created_at'
+            'messages.*',
+            'employees.name as employee_name',
+            'employees.client_name'
         )
         ->where('messages.status', 'CALLOFF')
-        ->whereDate('messages.created_at', today())
-        ->get()
-        ->groupBy('client_name');
+        ->whereDate('messages.created_at', $today)
+        ->orderBy('messages.created_at', 'desc')
+        ->get();
 
-    foreach ($clients as $clientName => $records) {
+    return view('daily-summary', [
+        'calloffs' => $calloffs
+    ]);
 
-        $clientEmail = $records[0]->client_email ?? 'kenji26m@gmail.com';
-
-        $body = "Daily Call-Off Summary\n\nClient: $clientName\n\n";
-
-        foreach ($records as $r) {
-
-            $name = $r->name ?? 'Unknown Employee';
-
-            $body .= "- {$name} ({$r->created_at}): {$r->body}\n";
-        }
-
-        Mail::raw($body, function ($mail) use ($clientEmail, $clientName) {
-
-            $mail->to($clientEmail)
-                ->subject("Daily Call-Off Summary - $clientName");
-        });
-    }
-
-    return "Summary emails sent";
 });
 
 Route::get('/client/{client}', function ($client) {

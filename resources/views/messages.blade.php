@@ -309,6 +309,7 @@
             <a href="/employees">Employees</a>
             <a href="/clients">Clients</a>
             <a href="/send-daily-summary">Daily Summary</a>
+<a href="/testing-checklist">Testing Checklist</a>
 <a href="/admin-logout" class="logout-link">
     Logout
 </a>

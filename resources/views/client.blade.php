@@ -1,136 +1,209 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title><?= ucfirst($client) ?> Dashboard</title>
+    <title><?= ucfirst($client) ?> Portal - CallOffApp</title>
 
     <style>
+        * { box-sizing: border-box; }
+
         body {
-            font-family: Arial, sans-serif;
-            background: #f3f4f6;
-            padding: 30px;
             margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            color: #111827;
+        }
+
+        .layout {
+            min-height: 100vh;
+            padding: 34px;
         }
 
         .container {
-            max-width: 1000px;
+            max-width: 1200px;
             margin: auto;
-        }
-
-        .card {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
-
-        h1 {
-            margin-top: 0;
         }
 
         .topbar {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 28px;
         }
 
-        .stats {
-            display: flex;
-            gap: 20px;
-            margin-top: 20px;
+        h1 {
+            margin: 0;
+            font-size: 32px;
         }
 
-        .stat-box {
-            flex: 1;
-            background: white;
-            padding: 20px;
+        .subtitle {
+            color: #64748b;
+            margin-top: 8px;
+        }
+
+        .button {
+            display: inline-block;
+            background: #111827;
+            color: white;
+            text-decoration: none;
+            padding: 12px 18px;
             border-radius: 10px;
-            text-align: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            font-weight: bold;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            margin-bottom: 26px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 14px;
+            padding: 22px;
+            box-shadow: 0 2px 8px rgba(15,23,42,0.08);
+        }
+
+        .stat-label {
+            color: #64748b;
+            font-size: 13px;
+            font-weight: bold;
+            text-transform: uppercase;
         }
 
         .stat-number {
             font-size: 36px;
             font-weight: bold;
-            color: #dc2626;
+            margin-top: 10px;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 14px;
+            box-shadow: 0 2px 8px rgba(15,23,42,0.08);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .panel-header h2 {
+            margin: 0;
+            font-size: 22px;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
         }
 
         table {
             width: 100%;
+            min-width: 900px;
             border-collapse: collapse;
         }
 
         th {
             background: #111827;
             color: white;
-            padding: 12px;
+            padding: 14px;
             text-align: left;
         }
 
         td {
-            padding: 12px;
+            padding: 14px;
             border-bottom: 1px solid #e5e7eb;
         }
 
+        tr.calloff {
+            background: #fee2e2;
+            border-left: 5px solid #dc2626;
+        }
+
         .badge {
-            color: white;
-            padding: 4px 8px;
-            border-radius: 6px;
+            display: inline-block;
+            padding: 5px 9px;
+            border-radius: 8px;
             font-weight: bold;
             font-size: 12px;
         }
 
-        .red {
+        .badge-red {
             background: #dc2626;
-        }
-
-        .orange {
-            background: #f59e0b;
-        }
-
-        .green {
-            background: #16a34a;
-        }
-
-        .gray {
-            background: #6b7280;
-        }
-
-        a.button {
-            background: #2563eb;
             color: white;
-            padding: 10px 14px;
-            border-radius: 6px;
-            text-decoration: none;
+        }
+
+        .badge-orange {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .badge-green {
+            background: #16a34a;
+            color: white;
+        }
+
+        .badge-gray {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .footer-note {
+            margin-top: 20px;
+            color: #64748b;
+            font-size: 13px;
+            text-align: center;
+        }
+
+        @media (max-width: 900px) {
+            .layout {
+                padding: 20px;
+            }
+
+            .topbar {
+                display: block;
+            }
+
+            .topbar .button {
+                margin-top: 15px;
+            }
+
+            .cards {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 
 <body>
 
+<div class="layout">
 <div class="container">
 
     <div class="topbar">
-        <h1><?= ucfirst($client) ?> Dashboard</h1>
+        <div>
+            <h1><?= ucfirst($client) ?> Portal</h1>
+            <div class="subtitle">
+                Real-time staffing call-off activity
+            </div>
+        </div>
 
-        <a class="button" href="/logout">
-            Logout
-        </a>
+        <a class="button" href="/logout">Logout</a>
     </div>
 
     <?php
-        $todayCount = 0;
-        $acknowledgedCount = 0;
+        $calloffCount = 0;
+        $duplicateCount = 0;
         $resolvedCount = 0;
 
         foreach ($messages as $m) {
-
             if ($m->status === 'CALLOFF') {
-                $todayCount++;
+                $calloffCount++;
             }
 
-            if ($m->acknowledged) {
-                $acknowledgedCount++;
+            if ($m->status === 'DUPLICATE') {
+                $duplicateCount++;
             }
 
             if ($m->resolved) {
@@ -139,128 +212,100 @@
         }
     ?>
 
-    <div class="stats">
+    <div class="cards">
 
-        <div class="stat-box">
-            <div>Total Call Offs</div>
-            <div class="stat-number">
-                <?= $todayCount ?>
-            </div>
+        <div class="stat-card">
+            <div class="stat-label">Call-Offs</div>
+            <div class="stat-number"><?= $calloffCount ?></div>
         </div>
 
-        <div class="stat-box">
-            <div>Acknowledged</div>
-            <div class="stat-number">
-                <?= $acknowledgedCount ?>
-            </div>
+        <div class="stat-card">
+            <div class="stat-label">Duplicates</div>
+            <div class="stat-number"><?= $duplicateCount ?></div>
         </div>
 
-        <div class="stat-box">
-            <div>Resolved</div>
-            <div class="stat-number">
-                <?= $resolvedCount ?>
-            </div>
+        <div class="stat-card">
+            <div class="stat-label">Resolved</div>
+            <div class="stat-number"><?= $resolvedCount ?></div>
         </div>
 
     </div>
 
-    <div class="card">
+    <div class="panel">
 
-        <table>
+        <div class="panel-header">
+            <h2>Call-Off Activity</h2>
+        </div>
 
-            <tr>
-                <th>Employee</th>
-                <th>Message</th>
-                <th>Status</th>
-                <th>Received</th>
-                <th>Acknowledged</th>
-                <th>Resolved</th>
-            </tr>
+        <div class="table-wrap">
 
-            <?php foreach ($messages as $msg): ?>
+            <table>
+                <tr>
+                    <th>Employee</th>
+                    <th>Message</th>
+                    <th>Status</th>
+                    <th>Received</th>
+                    <th>Acknowledged</th>
+                    <th>Resolved</th>
+                </tr>
 
-            <tr>
+                <?php foreach ($messages as $msg): ?>
 
-                <td>
-                    <?= $msg->employee_name ?? 'Unknown' ?>
-                </td>
+                    <tr class="<?= $msg->status === 'CALLOFF' ? 'calloff' : '' ?>">
 
-                <td>
-                    <?= $msg->body ?>
-                </td>
+                        <td>
+                            <strong><?= $msg->employee_name ?? 'Unknown' ?></strong>
+                        </td>
 
-                <td>
+                        <td>
+                            <?= $msg->body ?>
+                        </td>
 
-                    <?php if ($msg->status === 'CALLOFF'): ?>
+                        <td>
+                            <?php if ($msg->status === 'CALLOFF'): ?>
+                                <span class="badge badge-red">CALLOFF</span>
+                            <?php elseif ($msg->status === 'DUPLICATE'): ?>
+                                <span class="badge badge-orange">DUPLICATE</span>
+                            <?php else: ?>
+                                <span class="badge badge-gray"><?= $msg->status ?? 'N/A' ?></span>
+                            <?php endif; ?>
+                        </td>
 
-                        <span class="badge red">
-                            CALLOFF
-                        </span>
+                        <td>
+                            <?= date('m/d/Y g:i A', strtotime($msg->created_at)) ?>
+                        </td>
 
-                    <?php elseif ($msg->status === 'DUPLICATE'): ?>
+                        <td>
+                            <?php if ($msg->acknowledged): ?>
+                                <span class="badge badge-green">YES</span>
+                            <?php else: ?>
+                                <span class="badge badge-gray">NO</span>
+                            <?php endif; ?>
+                        </td>
 
-                        <span class="badge orange">
-                            DUPLICATE
-                        </span>
+                        <td>
+                            <?php if ($msg->resolved): ?>
+                                <span class="badge badge-green">YES</span>
+                            <?php else: ?>
+                                <span class="badge badge-gray">NO</span>
+                            <?php endif; ?>
+                        </td>
 
-                    <?php else: ?>
+                    </tr>
 
-                        <span class="badge gray">
-                            <?= $msg->status ?>
-                        </span>
+                <?php endforeach; ?>
 
-                    <?php endif; ?>
+            </table>
 
-                </td>
-
-                <td>
-                    <?= date('m/d/Y g:i A', strtotime($msg->created_at)) ?>
-                </td>
-
-                <td>
-
-                    <?php if ($msg->acknowledged): ?>
-
-                        <span class="badge green">
-                            YES
-                        </span>
-
-                    <?php else: ?>
-
-                        <span class="badge gray">
-                            NO
-                        </span>
-
-                    <?php endif; ?>
-
-                </td>
-
-                <td>
-
-                    <?php if ($msg->resolved): ?>
-
-                        <span class="badge green">
-                            YES
-                        </span>
-
-                    <?php else: ?>
-
-                        <span class="badge gray">
-                            NO
-                        </span>
-
-                    <?php endif; ?>
-
-                </td>
-
-            </tr>
-
-            <?php endforeach; ?>
-
-        </table>
+        </div>
 
     </div>
 
+    <div class="footer-note">
+        Powered by CallOffApp
+    </div>
+
+</div>
 </div>
 
 </body>

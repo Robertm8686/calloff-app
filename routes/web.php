@@ -7,6 +7,11 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Http;
 
+/*
+|--------------------------------------------------------------------------
+| Public Twilio SMS Webhook
+|--------------------------------------------------------------------------
+*/
 Route::post('/sms', function (Request $request) {
 
     $message = strtolower($request->input('Body'));
@@ -86,7 +91,7 @@ Route::post('/sms', function (Request $request) {
         $finalStatus = 'DUPLICATE';
     }
 
-    $messageId = DB::table('messages')->insertGetId([
+    DB::table('messages')->insert([
         'from' => $from,
         'body' => $message,
         'status' => $finalStatus,
@@ -108,8 +113,6 @@ Route::post('/sms', function (Request $request) {
         ->where('name', strtolower($clientName))
         ->first();
 
-    $notificationSent = false;
-
     if ($finalStatus === 'CALLOFF') {
 
         $emailBody = "Employee called off.\n\nName: $name\nClient: $clientName\nPhone: $from\nMessage: $message";
@@ -119,50 +122,7 @@ Route::post('/sms', function (Request $request) {
                 $mail->to($client->notification_email)
                     ->subject('Call Off Alert');
             });
-
-            $notificationSent = true;
         }
-    }
-
-    if ($finalStatus === 'CALLOFF' || $finalStatus === 'DUPLICATE') {
-        try {
-            $response = Http::withHeaders([
-                'Content-Type' => 'application/json',
-                'api_key' => env('BASE44_API_KEY'),
-            ])->post(
-                'https://api.base44.com/api/apps/' . env('BASE44_APP_ID') . '/entities/CallOff',
-                [
-                    'caller_phone' => $from,
-                    'source' => 'sms',
-                    'detected_status' => $finalStatus,
-                    'employee_name' => $name,
-                    'client_name' => $clientName,
-                    'call_off_date' => now()->format('Y-m-d'),
-                    'reason' => 'other',
-                    'method' => 'text',
-                    'raw_message' => $message,
-                    'notes' => $message,
-                    'notification_sent' => $notificationSent,
-                    'notification_email' => $client->notification_email ?? null,
-                    'duplicate' => $finalStatus === 'DUPLICATE',
-                    'render_message_id' => (string) $messageId,
-                ]
-            );
-if (!$response->successful()) {
-    Mail::raw(
-        "Base44 sync failed\n\nStatus: " . $response->status() . "\n\nBody:\n" . $response->body(),
-        function ($mail) {
-            $mail->to('kenji26m@gmail.com')
-                ->subject('Base44 Sync Failed');
-        }
-    );
-}
-} catch (\Exception $e) {
-    Mail::raw('Base44 sync exception: ' . $e->getMessage(), function ($mail) {
-        $mail->to('kenji26m@gmail.com')
-            ->subject('Base44 Sync Error');
-    });
-}
     }
 
     return response(
@@ -170,7 +130,46 @@ if (!$response->successful()) {
         200
     )->header('Content-Type', 'text/xml');
 });
+
+/*
+|--------------------------------------------------------------------------
+| Admin Login Routes
+|--------------------------------------------------------------------------
+*/
+Route::get('/admin-login', function () {
+    return view('admin-login');
+});
+
+Route::post('/admin-login', function (Request $request) {
+
+    if (
+        $request->email === env('ADMIN_EMAIL') &&
+        $request->password === env('ADMIN_PASSWORD')
+    ) {
+        session(['admin_logged_in' => true]);
+
+        return redirect('/messages');
+    }
+
+    return 'Admin login failed';
+});
+
+Route::get('/admin-logout', function () {
+    session()->forget('admin_logged_in');
+
+    return redirect('/admin-login');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Admin Dashboard / Messages
+|--------------------------------------------------------------------------
+*/
 Route::get('/messages/{id}/resolve', function ($id) {
+
+    if (!session('admin_logged_in')) {
+        return redirect('/admin-login');
+    }
 
     DB::table('messages')
         ->where('id', $id)
@@ -182,7 +181,12 @@ Route::get('/messages/{id}/resolve', function ($id) {
 
     return redirect('/messages');
 });
+
 Route::get('/messages/{id}/acknowledge', function ($id) {
+
+    if (!session('admin_logged_in')) {
+        return redirect('/admin-login');
+    }
 
     DB::table('messages')
         ->where('id', $id)
@@ -194,7 +198,12 @@ Route::get('/messages/{id}/acknowledge', function ($id) {
 
     return redirect('/messages');
 });
+
 Route::get('/messages', function (Request $request) {
+
+    if (!session('admin_logged_in')) {
+        return redirect('/admin-login');
+    }
 
     $query = DB::table('messages')
         ->leftJoin('employees', 'messages.from', '=', 'employees.phone')
@@ -214,6 +223,7 @@ Route::get('/messages', function (Request $request) {
 
         $query->where(function ($q) use ($search) {
             $q->where('messages.from', 'like', "%$search%")
+              ->orWhere('messages.body', 'like', "%$search%")
               ->orWhere('employees.name', 'like', "%$search%")
               ->orWhere('employees.client_name', 'like', "%$search%");
         });
@@ -243,19 +253,20 @@ Route::get('/messages', function (Request $request) {
     ]);
 });
 
-Route::get('/test-email', function () {
-
-    Mail::raw('This is a test email from the Calloff App.', function ($message) {
-        $message->to('kenji26m@gmail.com')
-            ->subject('Calloff App Test Email');
-    });
-
-    return 'Email sent';
-});
-
+/*
+|--------------------------------------------------------------------------
+| Employees Admin
+|--------------------------------------------------------------------------
+*/
 Route::get('/employees', function () {
 
-    $employees = DB::table('employees')->get();
+    if (!session('admin_logged_in')) {
+        return redirect('/admin-login');
+    }
+
+    $employees = DB::table('employees')
+        ->orderByDesc('created_at')
+        ->get();
 
     return view('employees', [
         'employees' => $employees
@@ -263,15 +274,24 @@ Route::get('/employees', function () {
 });
 
 Route::get('/employees/create', function () {
+
+    if (!session('admin_logged_in')) {
+        return redirect('/admin-login');
+    }
+
     return view('employees-create');
 });
 
 Route::post('/employees', function (Request $request) {
 
+    if (!session('admin_logged_in')) {
+        return redirect('/admin-login');
+    }
+
     DB::table('employees')->insert([
         'name' => $request->name,
         'phone' => $request->phone,
-        'client_name' => $request->client_name,
+        'client_name' => strtolower($request->client_name),
         'client_email' => $request->client_email,
         'active' => true,
         'created_at' => now(),
@@ -283,6 +303,10 @@ Route::post('/employees', function (Request $request) {
 
 Route::get('/employees/{id}/edit', function ($id) {
 
+    if (!session('admin_logged_in')) {
+        return redirect('/admin-login');
+    }
+
     $employee = DB::table('employees')
         ->where('id', $id)
         ->first();
@@ -293,6 +317,10 @@ Route::get('/employees/{id}/edit', function ($id) {
 });
 
 Route::post('/employees/{id}/update', function (Request $request, $id) {
+
+    if (!session('admin_logged_in')) {
+        return redirect('/admin-login');
+    }
 
     DB::table('employees')
         ->where('id', $id)
@@ -309,6 +337,10 @@ Route::post('/employees/{id}/update', function (Request $request, $id) {
 
 Route::get('/employees/delete/{id}', function ($id) {
 
+    if (!session('admin_logged_in')) {
+        return redirect('/admin-login');
+    }
+
     DB::table('employees')
         ->where('id', $id)
         ->delete();
@@ -316,7 +348,16 @@ Route::get('/employees/delete/{id}', function ($id) {
     return redirect('/employees');
 });
 
+/*
+|--------------------------------------------------------------------------
+| Daily Summary Admin Page
+|--------------------------------------------------------------------------
+*/
 Route::get('/send-daily-summary', function () {
+
+    if (!session('admin_logged_in')) {
+        return redirect('/admin-login');
+    }
 
     $today = now()->toDateString();
 
@@ -335,7 +376,40 @@ Route::get('/send-daily-summary', function () {
     return view('daily-summary', [
         'calloffs' => $calloffs
     ]);
+});
 
+/*
+|--------------------------------------------------------------------------
+| Client Portal Login / Dashboard
+|--------------------------------------------------------------------------
+*/
+Route::get('/login', function () {
+    return view('login');
+});
+
+Route::post('/login', function (Request $request) {
+
+    $client = DB::table('clients')
+        ->where('email', $request->email)
+        ->first();
+
+    if ($client && $request->password === $client->password) {
+
+        session([
+            'client' => $client->name
+        ]);
+
+        return redirect('/client/' . $client->name);
+    }
+
+    return 'Login failed';
+});
+
+Route::get('/logout', function () {
+
+    session()->flush();
+
+    return redirect('/login');
 });
 
 Route::get('/client/{client}', function ($client) {
@@ -361,75 +435,20 @@ Route::get('/client/{client}', function ($client) {
     ]);
 });
 
-Route::get('/login', function () {
-
-    return view('login');
-});
-Route::get('/admin-login', function () {
-    return view('admin-login');
-});
-
-Route::post('/admin-login', function (Request $request) {
-
-    if (
-        $request->email === env('ADMIN_EMAIL') &&
-        $request->password === env('ADMIN_PASSWORD')
-    ) {
-        session(['admin_logged_in' => true]);
-
-        return redirect('/messages');
-    }
-
-    return 'Admin login failed';
-});
-
-Route::get('/admin-logout', function () {
-    session()->forget('admin_logged_in');
-
-    return redirect('/admin-login');
-});
-Route::post('/login', function (Request $request) {
-
-    $client = DB::table('clients')
-        ->where('email', $request->email)
-        ->first();
-
-    if ($client && $request->password === $client->password) {
-
-        session([
-            'client' => $client->name
-        ]);
-
-        return redirect('/client/' . $client->name);
-    }
-
-    return 'Login failed';
-});
-
-Route::get('/logout', function () {
-
-    session()->flush();
-
-    return redirect('/login');
-});
-Route::get('/debug-clients', function () {
-    return DB::table('clients')->get();
-});
-Route::get('/seed-client', function () {
-    DB::table('clients')->updateOrInsert(
-        ['email' => 'castle@gmail.com'],
-        [
-            'name' => 'castle',
-            'password' => '1234',
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]
-    );
-
-    return 'Client added';
-});
+/*
+|--------------------------------------------------------------------------
+| Clients Admin
+|--------------------------------------------------------------------------
+*/
 Route::get('/clients', function () {
-    $clients = DB::table('clients')->get();
+
+    if (!session('admin_logged_in')) {
+        return redirect('/admin-login');
+    }
+
+    $clients = DB::table('clients')
+        ->orderByDesc('created_at')
+        ->get();
 
     return view('clients', [
         'clients' => $clients
@@ -437,9 +456,19 @@ Route::get('/clients', function () {
 });
 
 Route::get('/clients/create', function () {
+
+    if (!session('admin_logged_in')) {
+        return redirect('/admin-login');
+    }
+
     return view('clients-create');
 });
+
 Route::get('/clients/{id}/edit', function ($id) {
+
+    if (!session('admin_logged_in')) {
+        return redirect('/admin-login');
+    }
 
     $client = DB::table('clients')
         ->where('id', $id)
@@ -451,6 +480,10 @@ Route::get('/clients/{id}/edit', function ($id) {
 });
 
 Route::post('/clients/{id}/update', function (Request $request, $id) {
+
+    if (!session('admin_logged_in')) {
+        return redirect('/admin-login');
+    }
 
     DB::table('clients')
         ->where('id', $id)
@@ -467,7 +500,12 @@ Route::post('/clients/{id}/update', function (Request $request, $id) {
 
     return redirect('/clients');
 });
+
 Route::post('/clients', function (Request $request) {
+
+    if (!session('admin_logged_in')) {
+        return redirect('/admin-login');
+    }
 
     DB::table('clients')->insert([
         'name' => strtolower($request->name),
@@ -486,12 +524,22 @@ Route::post('/clients', function (Request $request) {
 
 Route::get('/clients/delete/{id}', function ($id) {
 
+    if (!session('admin_logged_in')) {
+        return redirect('/admin-login');
+    }
+
     DB::table('clients')
         ->where('id', $id)
         ->delete();
 
     return redirect('/clients');
 });
+
+/*
+|--------------------------------------------------------------------------
+| Public Twilio Voice Webhooks
+|--------------------------------------------------------------------------
+*/
 Route::post('/voice', function () {
 
     return response('
@@ -510,8 +558,8 @@ Route::post('/voice', function () {
 
 </Response>
 ', 200)->header('Content-Type', 'text/xml');
-
 });
+
 Route::post('/voice-recording', function (Request $request) {
 
     $from = $request->From;
@@ -568,90 +616,102 @@ Route::post('/voice-recording', function (Request $request) {
         $transcriptionStatus = 'failed';
     }
 
-$voiceStatus = 'OTHER';
+    $voiceStatus = 'OTHER';
 
-if ($transcriptionText) {
+    if ($transcriptionText) {
 
-    $transcriptionLower = strtolower($transcriptionText);
+        $transcriptionLower = strtolower($transcriptionText);
 
-    $calloffPhrases = [
-        'call off',
-        'sick',
-        'not coming',
-        'cant make it',
-        "can't make it",
-        'cannot make it',
-        'family emergency',
-        'hospital',
-        'no puedo ir',
-        'no voy a ir',
-        'estoy enfermo',
-        'estoy enferma',
-        'no puedo trabajar',
-        'tengo fiebre',
-        'emergencia familiar'
-    ];
+        $calloffPhrases = [
+            'call off',
+            'sick',
+            'not coming',
+            'cant make it',
+            "can't make it",
+            'cannot make it',
+            'family emergency',
+            'hospital',
+            'no puedo ir',
+            'no voy a ir',
+            'estoy enfermo',
+            'estoy enferma',
+            'no puedo trabajar',
+            'tengo fiebre',
+            'emergencia familiar'
+        ];
 
-    foreach ($calloffPhrases as $phrase) {
+        foreach ($calloffPhrases as $phrase) {
 
-        if (str_contains($transcriptionLower, $phrase)) {
+            if (str_contains($transcriptionLower, $phrase)) {
 
-            $voiceStatus = 'CALLOFF';
-            break;
+                $voiceStatus = 'CALLOFF';
+                break;
+            }
         }
     }
-}
 
-$alreadyCalledOffToday = DB::table('messages')
-    ->where('from', $from)
-    ->where('status', 'CALLOFF')
-    ->whereDate('created_at', today())
-    ->where('id', '!=', $messageId)
-    ->exists();
+    $alreadyCalledOffToday = DB::table('messages')
+        ->where('from', $from)
+        ->where('status', 'CALLOFF')
+        ->whereDate('created_at', today())
+        ->where('id', '!=', $messageId)
+        ->exists();
 
-if ($voiceStatus === 'CALLOFF' && $alreadyCalledOffToday) {
-    $voiceStatus = 'DUPLICATE';
-}
-
-DB::table('messages')
-    ->where('id', $messageId)
-    ->update([
-        'status' => $voiceStatus,
-        'transcription' => $transcriptionText,
-        'transcription_status' => $transcriptionStatus,
-        'updated_at' => now(),
-    ]);
-
-if ($voiceStatus === 'CALLOFF') {
-
-    $client = DB::table('clients')
-        ->where('name', strtolower($clientName))
-        ->first();
-
-    $emailBody = "Voice Call Off Received\n\n"
-        . "Employee: $name\n"
-        . "Client: $clientName\n"
-        . "Phone: $from\n\n"
-        . "Transcription:\n"
-        . ($transcriptionText ?? 'Transcription unavailable') . "\n\n"
-        . "Recording:\n"
-        . $recordingUrl;
-
-    if ($client && $client->notify_email && $client->notification_email) {
-
-        Mail::raw($emailBody, function ($mail) use ($client) {
-
-            $mail->to($client->notification_email)
-                ->subject('Voice Call Off Alert');
-
-        });
-
+    if ($voiceStatus === 'CALLOFF' && $alreadyCalledOffToday) {
+        $voiceStatus = 'DUPLICATE';
     }
-}
+
+    DB::table('messages')
+        ->where('id', $messageId)
+        ->update([
+            'status' => $voiceStatus,
+            'transcription' => $transcriptionText,
+            'transcription_status' => $transcriptionStatus,
+            'updated_at' => now(),
+        ]);
+
+    if ($voiceStatus === 'CALLOFF') {
+
+        $client = DB::table('clients')
+            ->where('name', strtolower($clientName))
+            ->first();
+
+        $emailBody = "Voice Call Off Received\n\n"
+            . "Employee: $name\n"
+            . "Client: $clientName\n"
+            . "Phone: $from\n\n"
+            . "Transcription:\n"
+            . ($transcriptionText ?? 'Transcription unavailable') . "\n\n"
+            . "Recording:\n"
+            . $recordingUrl;
+
+        if ($client && $client->notify_email && $client->notification_email) {
+
+            Mail::raw($emailBody, function ($mail) use ($client) {
+
+                $mail->to($client->notification_email)
+                    ->subject('Voice Call Off Alert');
+
+            });
+
+        }
+    }
 
     return response('OK', 200);
 });
+
+/*
+|--------------------------------------------------------------------------
+| Admin-Only Migration Runner
+|--------------------------------------------------------------------------
+*/
 Route::get('/run-migrations', function () {
+
+    if (!session('admin_logged_in')) {
+        return redirect('/admin-login');
+    }
+
     Artisan::call('migrate', ['--force' => true]);
+
     return nl2br(Artisan::output());
 });

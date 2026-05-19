@@ -365,7 +365,29 @@ Route::get('/login', function () {
 
     return view('login');
 });
+Route::get('/admin-login', function () {
+    return view('admin-login');
+});
 
+Route::post('/admin-login', function (Request $request) {
+
+    if (
+        $request->email === env('ADMIN_EMAIL') &&
+        $request->password === env('ADMIN_PASSWORD')
+    ) {
+        session(['admin_logged_in' => true]);
+
+        return redirect('/messages');
+    }
+
+    return 'Admin login failed';
+});
+
+Route::get('/admin-logout', function () {
+    session()->forget('admin_logged_in');
+
+    return redirect('/admin-login');
+});
 Route::post('/login', function (Request $request) {
 
     $client = DB::table('clients')

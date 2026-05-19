@@ -126,7 +126,7 @@ Route::post('/sms', function (Request $request) {
 
     if ($finalStatus === 'CALLOFF' || $finalStatus === 'DUPLICATE') {
         try {
-            Http::withHeaders([
+            $response = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'api-key' => env('BASE44_API_KEY'),
             ])->post(
@@ -148,9 +148,21 @@ Route::post('/sms', function (Request $request) {
                     'render_message_id' => (string) $messageId,
                 ]
             );
-        } catch (\Exception $e) {
-            // Ignore Base44 sync failure for now
+if (!$response->successful()) {
+    Mail::raw(
+        "Base44 sync failed\n\nStatus: " . $response->status() . "\n\nBody:\n" . $response->body(),
+        function ($mail) {
+            $mail->to('kenji26m@gmail.com')
+                ->subject('Base44 Sync Failed');
         }
+    );
+}
+} catch (\Exception $e) {
+    Mail::raw('Base44 sync exception: ' . $e->getMessage(), function ($mail) {
+        $mail->to('kenji26m@gmail.com')
+            ->subject('Base44 Sync Error');
+    });
+}
     }
 
     return response(

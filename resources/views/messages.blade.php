@@ -247,6 +247,14 @@
         .summary-list li {
             margin-bottom: 8px;
         }
+.logout-link {
+    background: #dc2626 !important;
+    color: white !important;
+}
+
+.logout-link:hover {
+    background: #b91c1c !important;
+}
 
         @media (max-width: 900px) {
             .layout {
@@ -301,6 +309,9 @@
             <a href="/employees">Employees</a>
             <a href="/clients">Clients</a>
             <a href="/send-daily-summary">Daily Summary</a>
+<a href="/admin-logout" class="logout-link">
+    Logout
+</a>
         </nav>
     </aside>
 

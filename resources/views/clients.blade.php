@@ -164,6 +164,14 @@
             font-size: 12px;
             font-weight: bold;
         }
+.logout-link {
+    background: #dc2626 !important;
+    color: white !important;
+}
+
+.logout-link:hover {
+    background: #b91c1c !important;
+}
 
         .pill-green {
             background: #dcfce7;
@@ -215,13 +223,17 @@
             </div>
         </div>
 
-        <nav class="nav">
-            <a href="/messages">Dashboard</a>
-            <a href="/messages?calloff=1">Call-Off Log</a>
-            <a href="/employees">Employees</a>
-            <a class="active" href="/clients">Clients</a>
-            <a href="/send-daily-summary">Daily Summary</a>
-        </nav>
+<nav class="nav">
+    <a href="/messages">Dashboard</a>
+    <a href="/messages?calloff=1">Call-Off Log</a>
+    <a class="active" href="/employees">Employees</a>
+    <a href="/clients">Clients</a>
+    <a href="/send-daily-summary">Daily Summary</a>
+
+    <a href="/admin-logout" class="logout-link">
+        Logout
+    </a>
+</nav>
 
     </aside>
 

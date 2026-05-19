@@ -59,7 +59,33 @@
 
 <div class="card">
 
-    <h1>Daily Call-Off Summary</h1>
+  <div style="margin-top:15px; margin-bottom:20px;">
+    <a href="/messages"
+       style="
+            background:#111827;
+            color:white;
+            padding:10px 16px;
+            border-radius:10px;
+            text-decoration:none;
+            font-weight:bold;
+            margin-right:10px;
+       ">
+        Dashboard
+    </a>
+
+    <a href="/admin-logout"
+       style="
+            background:#dc2626;
+            color:white;
+            padding:10px 16px;
+            border-radius:10px;
+            text-decoration:none;
+            font-weight:bold;
+       ">
+        Logout
+    </a>
+</div>  <h1>Daily Call-Off Summary</h1>
+
 
     <p><?= date('l, F j, Y') ?></p>
 

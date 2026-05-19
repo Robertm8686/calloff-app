@@ -1,377 +1,481 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Calloff Dashboard</title>
+    <title>CallOffApp Dashboard</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f6f8;
-            margin: 0;
-            padding: 30px;
+        * {
+            box-sizing: border-box;
         }
 
-.container {
-    max-width: 1400px;
-    margin: auto;
-}
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            color: #111827;
+        }
 
-        .card {
-            background: white;
-            padding: 20px;
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: #0f172a;
+            color: white;
+            padding: 24px 18px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 35px;
+        }
+
+        .brand-icon {
+            background: #f59e0b;
+            color: #111827;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 22px;
+        }
+
+        .brand-title {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .brand-subtitle {
+            color: #94a3b8;
+            font-size: 13px;
+        }
+
+        .nav a {
+            display: block;
+            color: #cbd5e1;
+            text-decoration: none;
+            padding: 14px 16px;
             border-radius: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .nav a.active,
+        .nav a:hover {
+            background: #1e293b;
+            color: white;
+        }
+
+        .content {
+            flex: 1;
+            padding: 34px;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
         }
 
         h1 {
-            margin-top: 0;
+            margin: 0;
+            font-size: 32px;
         }
 
-        .stats {
-            display: flex;
-            gap: 20px;
+        .date {
+            color: #6b7280;
+            margin-top: 8px;
         }
 
-        .stat-box {
-            background: #fff;
-            padding: 20px;
+        .button {
+            display: inline-block;
+            background: #111827;
+            color: white;
+            text-decoration: none;
+            padding: 12px 18px;
             border-radius: 10px;
-            flex: 1;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+        }
+
+        .button.secondary {
+            background: #64748b;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+            margin-bottom: 26px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 14px;
+            padding: 22px;
+            box-shadow: 0 2px 8px rgba(15,23,42,0.08);
+        }
+
+        .stat-label {
+            color: #64748b;
+            font-size: 13px;
+            font-weight: bold;
+            text-transform: uppercase;
         }
 
         .stat-number {
             font-size: 36px;
             font-weight: bold;
-            color: #c0392b;
+            margin-top: 10px;
         }
 
-        a.button {
-            display: inline-block;
-            padding: 10px 14px;
-            background: #2563eb;
-            color: white;
-            text-decoration: none;
-            border-radius: 6px;
-            margin-right: 8px;
+        .stat-note {
+            color: #64748b;
+            font-size: 14px;
+            margin-top: 6px;
         }
 
-        a.button.secondary {
-            background: #6b7280;
+        .panel {
+            background: white;
+            border-radius: 14px;
+            box-shadow: 0 2px 8px rgba(15,23,42,0.08);
+            margin-bottom: 24px;
+            overflow: hidden;
         }
 
-table {
-    width: 100%;
-    border-collapse: collapse;
-    table-layout: auto;
-}
+        .panel-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-.card {
-    overflow-x: auto;
-}
+        .panel-header h2 {
+            margin: 0;
+            font-size: 22px;
+        }
+
+        .search-box {
+            padding: 18px 24px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .search-box input {
+            padding: 12px;
+            width: 330px;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1100px;
+        }
 
         th {
             background: #111827;
             color: white;
+            padding: 14px;
             text-align: left;
-            padding: 12px;
+            font-size: 14px;
         }
 
         td {
-            padding: 12px;
+            padding: 14px;
             border-bottom: 1px solid #e5e7eb;
+            vertical-align: middle;
         }
 
         tr.calloff {
             background: #fee2e2;
+            border-left: 5px solid #dc2626;
         }
 
-        .status {
+        .badge {
+            display: inline-block;
+            padding: 5px 9px;
+            border-radius: 8px;
             font-weight: bold;
-            color: #b91c1c;
+            font-size: 12px;
+        }
+
+        .badge-red {
+            background: #dc2626;
+            color: white;
+        }
+
+        .badge-orange {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .badge-gray {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .badge-green {
+            background: #16a34a;
+            color: white;
+        }
+
+        .action-link {
+            color: #2563eb;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        .summary-list {
+            padding: 20px 24px;
+        }
+
+        .summary-list li {
+            margin-bottom: 8px;
+        }
+
+        @media (max-width: 900px) {
+            .layout {
+                display: block;
+            }
+
+            .sidebar {
+                width: 100%;
+            }
+
+            .cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .content {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .cards {
+                grid-template-columns: 1fr;
+            }
+
+            .topbar {
+                display: block;
+            }
+
+            .topbar .button {
+                margin-top: 15px;
+            }
         }
     </style>
 </head>
+
 <body>
-<div class="container">
 
-    <h1>Calloff Dashboard</h1>
+<div class="layout">
 
-    <div class="stats">
-        <div class="stat-box">
-            <div>Total Call Offs Today</div>
-            <div class="stat-number"><?= $todayCalloffs ?></div>
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-icon">%</div>
+            <div>
+                <div class="brand-title">CallOffApp</div>
+                <div class="brand-subtitle">Call-Off Manager</div>
+            </div>
         </div>
 
-        <div class="stat-box">
-            <div>Clients with Call Offs</div>
-            <div class="stat-number"><?= count($clientSummary) ?></div>
+        <nav class="nav">
+            <a class="active" href="/messages">Dashboard</a>
+            <a href="/messages?calloff=1">Call-Off Log</a>
+            <a href="/employees">Employees</a>
+            <a href="/clients">Clients</a>
+            <a href="/send-daily-summary">Daily Summary</a>
+        </nav>
+    </aside>
+
+    <main class="content">
+
+        <div class="topbar">
+            <div>
+                <h1>Dashboard</h1>
+                <div class="date"><?= date('l, F j, Y') ?></div>
+            </div>
+
+            <a class="button" href="/messages?calloff=1">View Call-Offs</a>
         </div>
-    </div>
 
-    <div class="card">
-        <a class="button" href="/messages">All Messages</a>
-<div class="card">
-    <form method="GET" action="/messages">
-        <input 
-            type="text" 
-            name="search" 
-            placeholder="Search employee, phone, or client..." 
-            style="padding:10px;width:300px;border-radius:6px;border:1px solid #ccc;"
-            value="<?= $_GET['search'] ?? '' ?>"
-        >
+        <div class="cards">
+            <div class="stat-card">
+                <div class="stat-label">Today</div>
+                <div class="stat-number"><?= $todayCalloffs ?></div>
+                <div class="stat-note">call-offs today</div>
+            </div>
 
-        <button type="submit" class="button">Search</button>
-    </form>
-</div>
-        <a class="button secondary" href="/messages?calloff=1">Call Off Only</a>
-        <a class="button secondary" href="/employees">Employees</a><a class="button secondary" href="/clients">Clients</a>
-        <a class="button secondary" href="/send-daily-summary">Send Daily Summary</a>
-    </div>
-<div class="card">
-    <form method="GET" action="/messages">
-        <input 
-            type="text" 
-            name="search" 
-            placeholder="Search employee, phone, or client..." 
-            style="padding:10px;width:300px;border-radius:6px;border:1px solid #ccc;"
-            value="<?= $_GET['search'] ?? '' ?>"
-        >
+            <div class="stat-card">
+                <div class="stat-label">Clients</div>
+                <div class="stat-number"><?= count($clientSummary) ?></div>
+                <div class="stat-note">with call-offs</div>
+            </div>
 
-        <button type="submit" class="button">Search</button>
-    </form>
-</div>
-    <div class="card">
-        <h2>Call Offs by Client</h2>
+            <div class="stat-card">
+                <div class="stat-label">Messages</div>
+                <div class="stat-number"><?= count($messages) ?></div>
+                <div class="stat-note">total records shown</div>
+            </div>
 
-<?php if (count($clientSummary) === 0): ?>
-    <p>No call offs today</p>
-<?php else: ?>
-    <ul>
-    <?php foreach ($clientSummary as $client): ?>
-        <li>
-            <?= $client->client_name ?? 'Unknown' ?>: <?= $client->total ?>
-        </li>
-    <?php endforeach; ?>
-    </ul>
-<?php endif; ?>
-    </div>
-<div class="card">
-    <h2>Today's Call-Offs</h2>
+            <div class="stat-card">
+                <div class="stat-label">Status</div>
+                <div class="stat-number">Live</div>
+                <div class="stat-note">Twilio connected</div>
+            </div>
+        </div>
 
-    <?php if (count($clientSummary) === 0): ?>
-        <p>No call offs today</p>
-    <?php else: ?>
-        <?php foreach ($clientSummary as $client): ?>
-            <h3><?= $client->client_name ?? 'Unknown' ?></h3>
+        <div class="panel">
+            <div class="panel-header">
+                <h2>Search Messages</h2>
+            </div>
 
-            <ul>
-            <?php foreach ($messages as $msg): ?>
-                <?php if ($msg->status === 'CALLOFF' && $msg->client_name == $client->client_name): ?>
-                    <li>
-                        <?= $msg->employee_name ?? 'Unknown' ?>
-                        (<?= date('m/d/Y g:i A', strtotime($msg->created_at)) ?>)
-                    </li>
+            <div class="search-box">
+                <form method="GET" action="/messages">
+                    <input
+                        type="text"
+                        name="search"
+                        placeholder="Search employee, phone, or client..."
+                        value="<?= $_GET['search'] ?? '' ?>"
+                    >
+                    <button type="submit" class="button">Search</button>
+                    <a class="button secondary" href="/messages">Reset</a>
+                </form>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <h2>Call-Offs by Client</h2>
+            </div>
+
+            <div class="summary-list">
+                <?php if (count($clientSummary) === 0): ?>
+                    <p>No call-offs today</p>
+                <?php else: ?>
+                    <ul>
+                        <?php foreach ($clientSummary as $client): ?>
+                            <li>
+                                <strong><?= $client->client_name ?? 'Unknown' ?></strong>:
+                                <?= $client->total ?>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
                 <?php endif; ?>
-            <?php endforeach; ?>
-            </ul>
-        <?php endforeach; ?>
-    <?php endif; ?>
-</div>
-    <div class="card">
-        <h2>Messages</h2>
+            </div>
+        </div>
 
-        <table>
-            <tr>
-                <th>ID</th>
-                <th>From</th>
-                <th>Employee</th>
-                <th>Client</th>
-                <th>Message</th>
- 		<th>Recording</th>
-		<th>Transcription</th>
-                <th>Status</th>
-<th>Received At</th>
-<th>Acknowledged</th>
-<th>Resolved</th>
-<th>Action</th>
-</tr>
+        <div class="panel">
+            <div class="panel-header">
+                <h2>Messages</h2>
+            </div>
 
-<?php foreach ($messages as $msg): ?>
-<tr style="<?= $msg->status === 'CALLOFF' ? 'background:#fee2e2;border-left:5px solid #dc2626;' : '' ?>">
-    <td><?= $msg->id ?></td>
-    <td><?= $msg->from ?></td>
-    <td><?= $msg->employee_name ?? 'Unknown' ?></td>
-    <td><?= $msg->client_name ?? 'N/A' ?></td>
-    <td><?= $msg->body ?></td>
-<td>
-    <?php if (!empty($msg->recording_url)): ?>
-        <a href="<?= $msg->recording_url ?>" target="_blank">Listen</a>
-    <?php else: ?>
-        —
-    <?php endif; ?>
-</td>
-<td>
-    <?php if (!empty($msg->transcription)): ?>
-        <?= $msg->transcription ?>
-    <?php else: ?>
-        <?= $msg->transcription_status ?? 'pending' ?>
-    <?php endif; ?>
-</td>
+            <div class="table-wrap">
+                <table>
+                    <tr>
+                        <th>ID</th>
+                        <th>From</th>
+                        <th>Employee</th>
+                        <th>Client</th>
+                        <th>Message</th>
+                        <th>Recording</th>
+                        <th>Transcription</th>
+                        <th>Status</th>
+                        <th>Received</th>
+                        <th>Acknowledged</th>
+                        <th>Resolved</th>
+                        <th>Action</th>
+                    </tr>
 
-<td>
+                    <?php foreach ($messages as $msg): ?>
+                        <tr class="<?= $msg->status === 'CALLOFF' ? 'calloff' : '' ?>">
+                            <td><?= $msg->id ?></td>
+                            <td><?= $msg->from ?></td>
+                            <td><?= $msg->employee_name ?? 'Unknown' ?></td>
+                            <td><?= $msg->client_name ?? 'N/A' ?></td>
+                            <td><?= $msg->body ?></td>
 
-<?php if ($msg->status === 'CALLOFF'): ?>
+                            <td>
+                                <?php if (!empty($msg->recording_url)): ?>
+                                    <a class="action-link" href="<?= $msg->recording_url ?>" target="_blank">Listen</a>
+                                <?php else: ?>
+                                    —
+                                <?php endif; ?>
+                            </td>
 
-    <span style="
-        background:#dc2626;
-        color:white;
-        padding:4px 8px;
-        border-radius:6px;
-        font-weight:bold;
-    ">
-        CALLOFF
-    </span>
+                            <td>
+                                <?php if (!empty($msg->transcription)): ?>
+                                    <?= $msg->transcription ?>
+                                <?php else: ?>
+                                    <?= $msg->transcription_status ?? 'pending' ?>
+                                <?php endif; ?>
+                            </td>
 
-<?php elseif ($msg->status === 'DUPLICATE'): ?>
+                            <td>
+                                <?php if ($msg->status === 'CALLOFF'): ?>
+                                    <span class="badge badge-red">CALLOFF</span>
+                                <?php elseif ($msg->status === 'DUPLICATE'): ?>
+                                    <span class="badge badge-orange">DUPLICATE</span>
+                                <?php else: ?>
+                                    <span class="badge badge-gray"><?= $msg->status ?? 'N/A' ?></span>
+                                <?php endif; ?>
+                            </td>
 
-    <span style="
-        background:#f59e0b;
-        color:white;
-        padding:4px 8px;
-        border-radius:6px;
-        font-weight:bold;
-    ">
-        DUPLICATE
-    </span>
+                            <td><?= date('m/d/Y g:i A', strtotime($msg->created_at)) ?></td>
 
-<?php else: ?>
+                            <td>
+                                <?php if ($msg->acknowledged): ?>
+                                    <span class="badge badge-green">YES</span><br>
+                                    <?= date('m/d/Y g:i A', strtotime($msg->acknowledged_at)) ?>
+                                <?php else: ?>
+                                    <span class="badge badge-gray">NO</span>
+                                <?php endif; ?>
+                            </td>
 
-    <span style="
-        background:#e5e7eb;
-        color:#374151;
-        padding:4px 8px;
-        border-radius:6px;
-    ">
-        <?= $msg->status ?? 'N/A' ?>
-    </span>
+                            <td>
+                                <?php if ($msg->resolved): ?>
+                                    <span class="badge badge-green">YES</span><br>
+                                    <?= date('m/d/Y g:i A', strtotime($msg->resolved_at)) ?>
+                                <?php else: ?>
+                                    <span class="badge badge-gray">NO</span>
+                                <?php endif; ?>
+                            </td>
 
-<?php endif; ?>
+                            <td>
+                                <?php if (!$msg->acknowledged && $msg->status === 'CALLOFF'): ?>
+                                    <a class="action-link" href="/messages/<?= $msg->id ?>/acknowledge">Acknowledge</a>
+                                <?php elseif ($msg->acknowledged && !$msg->resolved && $msg->status === 'CALLOFF'): ?>
+                                    <a class="action-link" href="/messages/<?= $msg->id ?>/resolve">Resolve</a>
+                                <?php else: ?>
+                                    —
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
 
-</td>
+                </table>
+            </div>
+        </div>
 
-<td><?= date('m/d/Y g:i A', strtotime($msg->created_at)) ?></td>
-
-<td>
-    <?php if ($msg->acknowledged): ?>
-        Yes<br>
-        <?= date('m/d/Y g:i A', strtotime($msg->acknowledged_at)) ?>
-    <?php else: ?>
-        No
-    <?php endif; ?>
-</td>
-
-<td>
-    <?php if ($msg->resolved): ?>
-        Yes<br>
-        <?= date('m/d/Y g:i A', strtotime($msg->resolved_at)) ?>
-    <?php else: ?>
-        No
-    <?php endif; ?>
-</td>
-
-<td>
-
-    <?php if (!$msg->acknowledged && $msg->status === 'CALLOFF'): ?>
-
-        <a href="/messages/<?= $msg->id ?>/acknowledge">
-            Acknowledge
-        </a>
-
-    <?php elseif ($msg->acknowledged && !$msg->resolved && $msg->status === 'CALLOFF'): ?>
-
-        <a href="/messages/<?= $msg->id ?>/resolve">
-            Resolve
-        </a>
-
-    <?php else: ?>
-        —
-    <?php endif; ?>
-
-</td>
-
-</tr>
-<?php endforeach; ?>
-        <?php foreach ($messages as $msg): ?>
-            <tr style="<?= $msg->status === 'CALLOFF' ? 'background:#fee2e2;border-left:5px solid #dc2626;' : '' ?>">
-                <td><?= $msg->id ?></td>
-                <td><?= $msg->from ?></td>
-                <td><?= $msg->employee_name ?? 'Unknown' ?></td>
-                <td><?= $msg->client_name ?? 'N/A' ?></td>
-                <td><?= $msg->body ?></td>
-<td>
-
-<?php if ($msg->status === 'CALLOFF'): ?>
-
-    <span style="
-        background:#dc2626;
-        color:white;
-        padding:4px 8px;
-        border-radius:6px;
-        font-weight:bold;
-    ">
-        CALLOFF
-    </span>
-
-<?php elseif ($msg->status === 'DUPLICATE'): ?>
-
-    <span style="
-        background:#f59e0b;
-        color:white;
-        padding:4px 8px;
-        border-radius:6px;
-        font-weight:bold;
-    ">
-        DUPLICATE
-    </span>
-
-<?php else: ?>
-
-    <span style="
-        background:#e5e7eb;
-        color:#374151;
-        padding:4px 8px;
-        border-radius:6px;
-    ">
-        <?= $msg->status ?? 'N/A' ?>
-    </span>
-
-<?php endif; ?>
-
-</td>
-                <td><?= date('m/d/Y g:i A', strtotime($msg->created_at)) ?></td>
-<td>
-    <?php if ($msg->acknowledged): ?>
-        Yes<br>
-        <?= date('m/d/Y g:i A', strtotime($msg->acknowledged_at)) ?>
-    <?php else: ?>
-        No
-    <?php endif; ?>
-</td>
-
-<td>
-    <?php if (!$msg->acknowledged && $msg->status === 'CALLOFF'): ?>
-        <a href="/messages/<?= $msg->id ?>/acknowledge">Acknowledge</a>
-    <?php else: ?>
-        —
-    <?php endif; ?>
-</td>
-            </tr>
-        <?php endforeach; ?>
-
-        </table>
-    </div>
+    </main>
 
 </div>
+
 </body>
 </html>

@@ -224,8 +224,9 @@
         </div>
 
 <nav class="nav">
-    <a href="/messages">Dashboard</a>
-    <a href="/messages?calloff=1">Call-Off Log</a>
+<a class="active" href="/messages">Dashboard</a>
+<a href="/calendar">Calendar</a>
+<a href="/messages?calloff=1">Call-Off Log</a>
     <a class="active" href="/employees">Employees</a>
     <a href="/clients">Clients</a>
     <a href="/send-daily-summary">Daily Summary</a>

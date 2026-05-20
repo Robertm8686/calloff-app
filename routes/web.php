@@ -780,6 +780,7 @@ Route::get('/api/calloffs', function () {
             'messages.from',
             'messages.body',
             'messages.status',
+	    'messages.reason',
             'messages.recording_url',
             'messages.transcription',
             'messages.transcription_status',

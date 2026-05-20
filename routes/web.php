@@ -71,13 +71,49 @@ Route::post('/sms', function (Request $request) {
     ];
 
     $status = 'OTHER';
+    $reason = 'Other';	
 
-    foreach ($calloffPhrases as $phrase) {
-        if (str_contains($message, $phrase)) {
-            $status = 'CALLOFF';
-            break;
+foreach ($calloffPhrases as $phrase) {
+
+    if (str_contains($message, $phrase)) {
+
+        $status = 'CALLOFF';
+
+        if (
+            str_contains($message, 'sick') ||
+            str_contains($message, 'fever') ||
+            str_contains($message, 'hospital') ||
+            str_contains($message, 'enfermo') ||
+            str_contains($message, 'enferma')
+        ) {
+
+            $reason = 'Sick';
+
+        } elseif (
+            str_contains($message, 'car') ||
+            str_contains($message, 'ride') ||
+            str_contains($message, 'transport') ||
+            str_contains($message, 'traffic')
+        ) {
+
+            $reason = 'Transportation';
+
+        } elseif (
+            str_contains($message, 'family') ||
+            str_contains($message, 'emergency')
+        ) {
+
+            $reason = 'Family Emergency';
+
+        } else {
+
+            $reason = 'General Call-Off';
+
         }
+
+        break;
     }
+}
 
     $alreadyCalledOffToday = DB::table('messages')
         ->where('from', $from)
@@ -95,6 +131,7 @@ Route::post('/sms', function (Request $request) {
         'from' => $from,
         'body' => $message,
         'status' => $finalStatus,
+	'reason' => $reason,
         'created_at' => now(),
         'updated_at' => now(),
     ]);

@@ -728,7 +728,101 @@ Route::post('/voice-recording', function (Request $request) {
 
     return response('OK', 200);
 });
+/*
+|--------------------------------------------------------------------------
+| Public API Endpoints for Future Base44 Frontend
+|--------------------------------------------------------------------------
+*/
 
+Route::get('/api/calloffs', function () {
+
+    return DB::table('messages')
+        ->leftJoin('employees', 'messages.from', '=', 'employees.phone')
+        ->select(
+            'messages.id',
+            'messages.from',
+            'messages.body',
+            'messages.status',
+            'messages.recording_url',
+            'messages.transcription',
+            'messages.transcription_status',
+            'messages.acknowledged',
+            'messages.acknowledged_at',
+            'messages.resolved',
+            'messages.resolved_at',
+            'messages.created_at',
+            'employees.name as employee_name',
+            'employees.client_name as client_name'
+        )
+        ->orderByDesc('messages.created_at')
+        ->get();
+
+});
+
+Route::get('/api/employees', function () {
+
+    return DB::table('employees')
+        ->orderBy('name')
+        ->get();
+
+});
+
+Route::get('/api/clients', function () {
+
+    return DB::table('clients')
+        ->orderBy('name')
+        ->get();
+
+});
+
+Route::get('/api/dashboard-stats', function () {
+
+    return [
+        'today_calloffs' => DB::table('messages')
+            ->where('status', 'CALLOFF')
+            ->whereDate('created_at', today())
+            ->count(),
+
+        'week_calloffs' => DB::table('messages')
+            ->where('status', 'CALLOFF')
+            ->whereBetween('created_at', [
+                now()->startOfWeek(),
+                now()->endOfWeek()
+            ])
+            ->count(),
+
+        'total_employees' => DB::table('employees')->count(),
+
+        'total_clients' => DB::table('clients')->count(),
+
+        'open_calloffs' => DB::table('messages')
+            ->where('status', 'CALLOFF')
+            ->where(function ($q) {
+                $q->where('resolved', false)
+                  ->orWhereNull('resolved');
+            })
+            ->count(),
+    ];
+
+});
+
+Route::get('/api/calendar', function () {
+
+    return DB::table('messages')
+        ->leftJoin('employees', 'messages.from', '=', 'employees.phone')
+        ->select(
+            'messages.id',
+            'messages.body',
+            'messages.status',
+            'messages.created_at',
+            'employees.name as employee_name',
+            'employees.client_name as client_name'
+        )
+        ->whereIn('messages.status', ['CALLOFF', 'DUPLICATE'])
+        ->orderByDesc('messages.created_at')
+        ->get();
+
+});
 /*
 |--------------------------------------------------------------------------
 | Admin-Only Migration Runner

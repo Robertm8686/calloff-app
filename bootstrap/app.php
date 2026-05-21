@@ -11,9 +11,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->validateCsrfTokens(except: [
-            'sms',
-        ]);
+$middleware->validateCsrfTokens(except: [
+    'sms',
+    'voice',
+    'voice-recording',
+]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

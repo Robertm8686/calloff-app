@@ -410,6 +410,7 @@
                         <th>Recording</th>
                         <th>Transcription</th>
                         <th>Status</th>
+			<th>Reason</th>
                         <th>Received</th>
                         <th>Acknowledged</th>
                         <th>Resolved</th>
@@ -449,6 +450,10 @@
                                     <span class="badge badge-gray"><?= $msg->status ?? 'N/A' ?></span>
                                 <?php endif; ?>
                             </td>
+
+<td>
+    <?= $msg->reason ?? '-' ?>
+</td>
 
                             <td><?= date('m/d/Y g:i A', strtotime($msg->created_at)) ?></td>
 

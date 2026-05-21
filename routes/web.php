@@ -645,25 +645,29 @@ Route::get('/clients/delete/{id}', function ($id) {
 | Public Twilio Voice Webhooks
 |--------------------------------------------------------------------------
 */
-Route::match(['get', 'post'], '/voice', function () {
-
-    return response('
+return response('
 <Response>
 
     <Say voice="alice">
-        Please leave your call off message after the beep.
-        Para español, deje su mensaje después del tono.
+        Please leave your call-off message after the beep. When finished, press pound.
+        Para español, deje su mensaje después del tono. Cuando termine, presione gato.
     </Say>
 
     <Record
         maxLength="60"
         playBeep="true"
+        finishOnKey="#"
         recordingStatusCallback="https://calloff-app-1.onrender.com/voice-recording"
     />
 
+    <Say voice="alice">
+        Thank you. Your call-off has been received. Goodbye.
+    </Say>
+
+    <Hangup />
+
 </Response>
 ', 200)->header('Content-Type', 'text/xml');
-});
 
 Route::match(['get', 'post'], '/voice-recording', function (Request $request) {
 

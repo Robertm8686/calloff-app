@@ -665,7 +665,7 @@ Route::match(['get', 'post'], '/voice', function () {
 ', 200)->header('Content-Type', 'text/xml');
 });
 
-Route::post('/voice-recording', function (Request $request) {
+Route::match(['get', 'post'], '/voice-recording', function (Request $request) {
 
     $from = $request->From;
     $recordingUrl = $request->RecordingUrl;

@@ -115,17 +115,18 @@ foreach ($calloffPhrases as $phrase) {
     }
 }
 
-    $alreadyCalledOffToday = DB::table('messages')
-        ->where('from', $from)
-        ->where('status', 'CALLOFF')
-        ->whereDate('created_at', today())
-        ->exists();
+$recentDuplicate = DB::table('messages')
+    ->where('from', $from)
+    ->whereIn('status', ['CALLOFF', 'DUPLICATE'])
+    ->where('body', $message)
+    ->where('created_at', '>=', now()->subMinutes(10))
+    ->exists();
 
-    $finalStatus = $status;
+$finalStatus = $status;
 
-    if ($status === 'CALLOFF' && $alreadyCalledOffToday) {
-        $finalStatus = 'DUPLICATE';
-    }
+if ($status === 'CALLOFF' && $recentDuplicate) {
+    $finalStatus = 'DUPLICATE';
+}
 
     DB::table('messages')->insert([
         'from' => $from,

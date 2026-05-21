@@ -645,7 +645,7 @@ Route::get('/clients/delete/{id}', function ($id) {
 | Public Twilio Voice Webhooks
 |--------------------------------------------------------------------------
 */
-Route::post('/voice', function () {
+Route::match(['get', 'post'], '/voice', function () {
 
     return response('
 <Response>

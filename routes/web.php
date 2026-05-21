@@ -658,7 +658,7 @@ Route::post('/voice', function () {
     <Record
         maxLength="60"
         playBeep="true"
-        recordingStatusCallback="/voice-recording"
+        recordingStatusCallback="https://calloff-app-1.onrender.com/voice-recording"
     />
 
 </Response>

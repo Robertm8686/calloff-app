@@ -414,6 +414,7 @@
                         <th>Received</th>
                         <th>Acknowledged</th>
                         <th>Resolved</th>
+			<th>Client Alert</th>
                         <th>Action</th>
                     </tr>
 
@@ -474,7 +475,29 @@
                                     <span class="badge badge-gray">NO</span>
                                 <?php endif; ?>
                             </td>
+<td>
 
+    <?php if ($msg->notification_sent): ?>
+
+        <span class="badge badge-green">
+            SENT
+        </span>
+
+    <?php elseif (!empty($msg->notification_error)): ?>
+
+        <span class="badge badge-red">
+            FAILED
+        </span>
+
+    <?php else: ?>
+
+        <span class="badge badge-gray">
+            PENDING
+        </span>
+
+    <?php endif; ?>
+
+</td>
                             <td>
                                 <?php if (!$msg->acknowledged && $msg->status === 'CALLOFF'): ?>
                                     <a class="action-link" href="/messages/<?= $msg->id ?>/acknowledge">Acknowledge</a>

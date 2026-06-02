@@ -665,191 +665,20 @@ Route::match(['get', 'post'], '/voice', function () {
 
 Route::match(['get', 'post'], '/voice-recording', function (Request $request) {
 
-    $from = $request->From;
-    $recordingUrl = $request->RecordingUrl;
-
-    $employee = DB::table('employees')
-        ->where('phone', $from)
-        ->first();
-
-    $name = $employee->name ?? 'Unknown';
-    $clientName = $employee->client_name ?? 'Unknown';
-
-    $messageId = DB::table('messages')->insertGetId([
-        'from' => $from,
+    DB::table('messages')->insert([
+        'from' => $request->From,
         'body' => 'Voice call received',
         'status' => 'CALLOFF',
-        'recording_url' => $recordingUrl,
+        'reason' => 'Voice Call-Off',
+        'recording_url' => $request->RecordingUrl,
         'transcription_status' => 'pending',
         'created_at' => now(),
         'updated_at' => now(),
     ]);
 
-    $transcriptionText = null;
-    $transcriptionStatus = 'failed';
-
-    try {
-        $audioUrl = $recordingUrl . '.mp3';
-
-        $audioResponse = Http::withBasicAuth(
-            env('TWILIO_ACCOUNT_SID'),
-            env('TWILIO_AUTH_TOKEN')
-        )->get($audioUrl);
-
-        if ($audioResponse->successful()) {
-
-            $transcriptionResponse = Http::withToken(env('OPENAI_API_KEY'))
-                ->attach(
-                    'file',
-                    $audioResponse->body(),
-                    'recording.mp3'
-                )
-                ->post('https://api.openai.com/v1/audio/transcriptions', [
-                    'model' => 'whisper-1',
-                    'response_format' => 'json',
-                ]);
-
-            if ($transcriptionResponse->successful()) {
-                $transcriptionText = $transcriptionResponse->json('text');
-                $transcriptionStatus = 'complete';
-            }
-        }
-
-    } catch (\Exception $e) {
-        $transcriptionStatus = 'failed';
-    }
-
-    $voiceStatus = 'OTHER';
-    $reason = 'Other';
-
-    if ($transcriptionText) {
-
-        $transcriptionLower = strtolower($transcriptionText);
-
-        $calloffPhrases = [
-            'call off',
-            'sick',
-            'not coming',
-            'cant make it',
-            "can't make it",
-            'cannot make it',
-            'family emergency',
-            'hospital',
-            'no puedo ir',
-            'no voy a ir',
-            'estoy enfermo',
-            'estoy enferma',
-            'no puedo trabajar',
-            'tengo fiebre',
-            'emergencia familiar'
-        ];
-
-        foreach ($calloffPhrases as $phrase) {
-
-            if (str_contains($transcriptionLower, $phrase)) {
-
-                $voiceStatus = 'CALLOFF';
-
-                if (
-                    str_contains($transcriptionLower, 'sick') ||
-                    str_contains($transcriptionLower, 'fever') ||
-                    str_contains($transcriptionLower, 'hospital') ||
-                    str_contains($transcriptionLower, 'enfermo') ||
-                    str_contains($transcriptionLower, 'enferma')
-                ) {
-                    $reason = 'Sick';
-                } elseif (
-                    str_contains($transcriptionLower, 'car') ||
-                    str_contains($transcriptionLower, 'ride') ||
-                    str_contains($transcriptionLower, 'transport') ||
-                    str_contains($transcriptionLower, 'traffic')
-                ) {
-                    $reason = 'Transportation';
-                } elseif (
-                    str_contains($transcriptionLower, 'family') ||
-                    str_contains($transcriptionLower, 'emergency')
-                ) {
-                    $reason = 'Family Emergency';
-                } else {
-                    $reason = 'General Call-Off';
-                }
-
-                break;
-            }
-        }
-    }
-
-    $recentDuplicate = DB::table('messages')
-        ->where('from', $from)
-        ->whereIn('status', ['CALLOFF', 'DUPLICATE'])
-        ->where('body', 'Voice call received')
-        ->where('created_at', '>=', now()->subMinutes(10))
-        ->where('id', '!=', $messageId)
-        ->exists();
-
-    if ($voiceStatus === 'CALLOFF' && $recentDuplicate) {
-        $voiceStatus = 'DUPLICATE';
-    }
-
-    DB::table('messages')
-        ->where('id', $messageId)
-        ->update([
-            'status' => $voiceStatus,
-            'reason' => $reason,
-            'transcription' => $transcriptionText,
-            'transcription_status' => $transcriptionStatus,
-            'updated_at' => now(),
-        ]);
-
-    if ($voiceStatus === 'CALLOFF') {
-
-        $client = DB::table('clients')
-            ->where('name', strtolower($clientName))
-            ->first();
-
-        $emailBody = "VOICE CALL OFF ALERT\n\n"
-            . "Employee: $name\n"
-            . "Client: $clientName\n"
-            . "Phone: $from\n"
-            . "Reason: $reason\n"
-            . "Time: " . now()->format('m/d/Y g:i A') . "\n\n"
-            . "Transcription:\n"
-            . ($transcriptionText ?? 'Transcription unavailable') . "\n\n"
-            . "Recording:\n"
-            . $recordingUrl . "\n\n"
-            . "This alert was automatically generated by CallOffApp.";
-
-        if ($client && $client->notify_email && $client->notification_email) {
-
-            try {
-
-                Mail::raw($emailBody, function ($mail) use ($client, $name) {
-                    $mail->to($client->notification_email)
-                        ->subject("Voice Call Off Alert - $name");
-                });
-
-                DB::table('messages')
-                    ->where('id', $messageId)
-                    ->update([
-                        'notification_sent' => true,
-                        'notification_sent_at' => now(),
-                    ]);
-
-            } catch (\Exception $e) {
-
-                DB::table('messages')
-                    ->where('id', $messageId)
-                    ->update([
-                        'notification_error' => $e->getMessage(),
-                    ]);
-
-            }
-        }
-    }
-
     return response('OK', 200);
-});
 
+});
 /*
 |--------------------------------------------------------------------------
 | Public API Endpoints for Future Base44 Frontend

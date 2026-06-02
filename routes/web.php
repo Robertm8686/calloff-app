@@ -665,8 +665,11 @@ Route::match(['get', 'post'], '/voice', function () {
 
 Route::match(['get', 'post'], '/voice-recording', function (Request $request) {
 
-    $from = $request->input('From');
-    $recordingUrl = $request->input('RecordingUrl');
+    $from = $request->input('From')
+        ?? $request->input('Caller')
+        ?? 'unknown';
+
+    $recordingUrl = $request->input('RecordingUrl') ?? '';
 
     DB::table('messages')->insert([
         'from' => $from,

@@ -665,12 +665,15 @@ Route::match(['get', 'post'], '/voice', function () {
 
 Route::match(['get', 'post'], '/voice-recording', function (Request $request) {
 
+    $from = $request->input('From');
+    $recordingUrl = $request->input('RecordingUrl');
+
     DB::table('messages')->insert([
-        $from = $request->input('From');
+        'from' => $from,
         'body' => 'Voice call received',
         'status' => 'CALLOFF',
         'reason' => 'Voice Call-Off',
-        $recordingUrl = $request->input('RecordingUrl');
+        'recording_url' => $recordingUrl,
         'transcription_status' => 'pending',
         'created_at' => now(),
         'updated_at' => now(),
